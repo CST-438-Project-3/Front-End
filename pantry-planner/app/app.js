@@ -8,6 +8,7 @@ const Stack = createNativeStackNavigator();
 const App = () => {
   const [loaded] = useFonts({
     Montserrat: require('../assets/fonts/Montserrat-Regular.ttf'),
+    MontserratBold: require('../assets/fonts/Montserrat-Bold.ttf'),
   });
 
   useEffect(() => {
@@ -27,7 +28,6 @@ const App = () => {
         component={Index} 
         options={{headerShown: false}}
         />
-        
       </Stack.Navigator>
     </NavigationContainer>
   );
