@@ -1,12 +1,15 @@
-import { Stack } from "expo-router";
+import * as React from 'react';
+import { Stack } from 'expo-router';
 
-export default function RootLayout() {
+const App = () => {
   return (
-    <Stack>
-      <Stack.Screen 
-      name="index" 
-      options={{headerShown: false}}
-      />
-    </Stack>
+      <Stack>
+        <Stack.Screen name="index" options={{headerShown: false}} />
+        <Stack.Screen name="SignUp" options={{headerShown: false}} />
+        <Stack.Screen name="SignIn" options={{headerShown: false}} />
+        <Stack.Screen name="(tabs)" options={{headerShown: false}} />
+      </Stack>
   );
 }
+
+export default App;
