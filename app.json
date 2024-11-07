@@ -31,12 +31,6 @@
     ],
     "experiments": {
       "typedRoutes": true
-    },
-    "fonts": [
-      {
-        "asset": "./assets/fonts/Montaga-Regular.ttf",
-        "family": "Montaga"
-      }
-    ]
+    }
   }
 }

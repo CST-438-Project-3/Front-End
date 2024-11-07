@@ -43,7 +43,7 @@ const Index = () => {
           </Text>
         </View>
         <View style={styles.buttonContainer}>
-          <Link href="/signUp" style={styles.button}>
+          <Link href="/SignUp" style={styles.button}>
             <Text style={{ fontFamily:"MontserratSemiBold",textAlign: "center", fontSize: isMobile ? 18 : 27 }}>Get Started</Text>
           </Link>
           {/* <Pressable
