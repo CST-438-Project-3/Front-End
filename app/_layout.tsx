@@ -1,15 +1,24 @@
-import * as React from 'react';
 import { Stack } from 'expo-router';
+import React from 'react';
 
-const App = () => {
+const Layout: React.FC = () => {
   return (
-      <Stack>
-        <Stack.Screen name="index" options={{headerShown: false}} />
-        <Stack.Screen name="SignUp" options={{headerShown: false}} />
-        <Stack.Screen name="SignIn" options={{headerShown: false}} />
-        <Stack.Screen name="(tabs)" options={{headerShown: false}} />
-      </Stack>
+    <Stack
+      screenOptions={{
+        headerShown: false,
+        gestureEnabled: false,
+        animation: 'none'
+      }}
+    >
+      <Stack.Screen name="index" />
+      <Stack.Screen name="signUp" />
+      <Stack.Screen name="logIn" />
+      <Stack.Screen name="pantry" />
+      <Stack.Screen name="recipes" />
+      <Stack.Screen name="restock" />
+      <Stack.Screen name="favorites" />
+    </Stack>
   );
 }
 
-export default App;
+export default Layout;
