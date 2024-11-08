@@ -29,7 +29,7 @@ const LogIn = () => {
         try {
             const result = await promptAsync();
             if (result?.type === 'success') {
-                router.push('/pantry');
+                router.push('/(tabs)');
             }
         } catch (error) {
             console.error('Google Sign In Error:', error);
@@ -37,7 +37,7 @@ const LogIn = () => {
     };
 
     const handleSubmit = () => {
-        router.push('/pantry');
+        router.push('/(tabs)');
     };
 
     const handleSignUp = () => {
