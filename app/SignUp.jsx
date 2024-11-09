@@ -114,7 +114,7 @@ const SignUp = () => {
                 </TouchableOpacity>
             </View>
 
-            <Text style={styles.orText}>or log in with google</Text>
+            <Text style={styles.orText}>or sign up with google</Text>
 
             <TouchableOpacity 
                 style={styles.googleButton}
@@ -132,7 +132,7 @@ const styles = StyleSheet.create({
         padding: 20,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#846E6E',
+        backgroundColor: '#524242',
     },
     mainTitle: {
         fontFamily: 'Montaga',
@@ -196,7 +196,7 @@ const styles = StyleSheet.create({
     },
     loginLink: {
         fontFamily: 'Montaga',
-        color: '#231911',
+        color: '#B19696',
         fontSize: 14,
         marginLeft: 5,
     },

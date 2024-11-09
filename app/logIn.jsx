@@ -41,7 +41,7 @@ const LogIn = () => {
     };
 
     const handleSignUp = () => {
-        router.push('/signUp');
+        router.push('/SignUp');
     };
 
     if (!fontsLoaded) {
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
         padding: 20,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#846E6E',
+        backgroundColor: '#524242',
     },
     mainTitle: {
         fontFamily: 'Montaga',
@@ -174,7 +174,7 @@ const styles = StyleSheet.create({
     },
     signUpLink: {
         fontFamily: 'Montaga',
-        color: '#231911',
+        color: '#B19696',
         fontSize: 14,
         marginLeft: 5,
     },
