@@ -1,6 +1,10 @@
 import * as React from 'react';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Dimensions } from "react-native";
 import { Tabs } from 'expo-router';
+
+const { width } = Dimensions.get('window');
+const isMobile = width < 600;
 
 const tabs = () => {
   return (
@@ -9,14 +13,19 @@ const tabs = () => {
             tabBarActiveTintColor: '#ffffff',
             tabBarStyle: {
                 backgroundColor: '#373030',
+                borderTopWidth: 0,
                 },
+            tabBarShowLabel: false,
+            headerShown: false,
       }}
       >
-        <Tabs.Screen name="index" options={{headerShown: false, title: 'Home',  tabBarIcon: ({ color, focused }) => (
+        <Tabs.Screen name="index" options={{title: 'Home',  tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'home-sharp' : 'home-outline'} color={color} size={24} />
           ),}} />   
-        <Tabs.Screen name="recipes" options={{headerShown: false}} /> 
-        <Tabs.Screen name="restock" options={{headerShown: false}} /> 
+        <Tabs.Screen name="recipe" options={{tabBarIcon:({color})=> {
+          return <Ionicons name="list" size={24} color={color} />
+        }}} /> 
+        {/* <Tabs.Screen name="restock" options={{}} />  */}
       </Tabs>
   );
 }
