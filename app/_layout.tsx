@@ -11,12 +11,8 @@ const Layout: React.FC = () => {
       }}
     >
       <Stack.Screen name="index" />
-      <Stack.Screen name="signUp" />
+      <Stack.Screen name="SignUp" />
       <Stack.Screen name="logIn" />
-      <Stack.Screen name="pantry" />
-      <Stack.Screen name="recipes" />
-      <Stack.Screen name="restock" />
-      <Stack.Screen name="favorites" />
     </Stack>
   );
 }
