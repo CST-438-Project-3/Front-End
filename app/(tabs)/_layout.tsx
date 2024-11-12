@@ -14,6 +14,8 @@ const tabs = () => {
             tabBarStyle: {
                 backgroundColor: '#373030',
                 borderTopWidth: 0,
+                height: 70,
+                display: isMobile? 'flex' : 'none',
                 },
             tabBarShowLabel: false,
             headerShown: false,
