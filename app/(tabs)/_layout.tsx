@@ -27,8 +27,12 @@ const tabs = () => {
         <Tabs.Screen name="recipe" options={{tabBarIcon:({color})=> (
           <Ionicons name="list" size={24} color={color} />
         ),}} /> 
-        <Tabs.Screen name="restock" options={{}} /> 
-        <Tabs.Screen name="favorites" options={{}} />
+        <Tabs.Screen name="restock" options={{tabBarIcon:({color})=> (
+          <Ionicons name="time" size={24} color={color} />
+        ),}} /> 
+        <Tabs.Screen name="favorites" options={{tabBarIcon:({color})=> (
+          <Ionicons name="heart" size={24} color={color} />
+        ),}} /> 
       </Tabs>
   );
 }
