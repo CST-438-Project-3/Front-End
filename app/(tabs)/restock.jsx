@@ -91,40 +91,44 @@ const Restock = () => {
 
     return (
         <View style={styles.container}>
+            {/* Title */}
+            <View style={{flexDirection: 'row', justifyContent: 'space-between', marginTop: 40}}>
+                <Text style={styles.title}>PantryPal</Text>
+
+                {/* Navigation */}
+                <View style={{flexDirection: 'row', justifyContent: 'space-between', marginEnd: 50, display: isMobile ? 'none' : 'flex'}}>
+                <Link href="/" style={styles.navText}>
+                        <Text>my pantry</Text>
+                    </Link>
+                    <Link href="/recipe" style={styles.navText}>
+                        <Text >recipes</Text>
+                    </Link>
+                    <Link href="/restock" style={styles.navText}>
+                        <Text >restock</Text>
+                    </Link>
+                    <Link href="/favorites" style={styles.navText}>
+                        <Text >favorites</Text>
+                    </Link>
+                </View>
+            </View>
+           
+
+            {/* Username */}
+            <View style={{flexDirection:'row', justifyContent:'space-between', alignItems: 'center'}}>
+                <Text style={styles.username}>Restock</Text>
+                <Ionicons name="add" size={40} color="#BCABAB"/>
+            </View>
+
+            {/* Search bar */}
+            <View style={styles.searchSection}>
+                <Ionicons style={styles.searchIcon} name="search" size={22} color="#BCABAB" />
+                <TextInput
+                    style={styles.input}
+                    // onChangeText={}
+                />
+            </View>
             <View style={styles.content}>
                 <View style={styles.headerSection}>
-                    {/* Title */}
-                    <View style={styles.headerRow}>
-                        <Text style={styles.title}>PantryPal</Text>
-                        {/* Navigation */}
-                        <View style={styles.navigation}>
-                            <Link href="/" style={styles.navText}>
-                                <Text>my pantry</Text>
-                            </Link>
-                            <Link href="/recipe" style={styles.navText}>
-                                <Text>recipes</Text>
-                            </Link>
-                            <Text style={styles.navText}>restock</Text>
-                            <Link href="/favorites" style={styles.navText}>
-                                <Text>favorites</Text>
-                            </Link>
-                        </View>
-                    </View>
-
-                    {/* Username */}
-                    <View style={styles.titleRow}>
-                        <Text style={styles.username}>Restock</Text>
-                        <Ionicons name="add" size={isMobile ? 32 : 40} color="#BCABAB"/>
-                    </View>
-
-                    {/* Search bar */}
-                    <View style={styles.searchSection}>
-                        <Ionicons style={styles.searchIcon} name="search" size={24} color="#BCABAB" />
-                        <TextInput 
-                            style={styles.input}
-                            placeholderTextColor="#BCABAB"
-                        />
-                    </View>
                 </View>
 
                 {/* Scrollable Content */}
@@ -150,6 +154,24 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#524242',
+        alignItems: 'flex-left',
+        padding: 20,
+    },
+    title: {
+        fontFamily: 'Montaga',
+        fontSize: 46,
+        color: '#BCABAB',
+    },
+    navText: {
+        fontFamily: 'Montaga',
+        fontSize: 26,
+        color: '#BCABAB',
+        margin: 20,
+    },
+    username: {
+        fontFamily: 'Montaga',
+        fontSize: 56,
+        color: '#ffffff',
     },
     content: {
         width: '100%',
@@ -178,22 +200,6 @@ const styles = StyleSheet.create({
     scrollContainer: {
         left: 1200, 
         paddingRight: 40,
-    },
-    title: {
-        fontFamily: 'Montaga',
-        fontSize: isMobile ? 36 : 46,
-        color: '#BCABAB',
-    },
-    navText: {
-        fontFamily: 'Montaga',
-        fontSize: isMobile ? 22 : 26,
-        color: '#BCABAB',
-        margin: 20,
-    },
-    username: {
-        fontFamily: 'Montaga',
-        fontSize: isMobile ? 42 : 56,
-        color: '#ffffff',
     },
     searchSection: {
         flexDirection: 'row',

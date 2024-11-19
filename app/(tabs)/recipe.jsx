@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, StyleSheet, Dimensions, TextInput, FlatList, Image } from "react-native";
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, Dimensions, TextInput, FlatList, Image, Modal, TouchableOpacity } from "react-native";
 import { useFonts } from 'expo-font';
 import { Link } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
@@ -30,9 +30,49 @@ const Recipe = () => {
         return null;
     }
 
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [modalVisible, setModalVisible] = useState(false);
+
+    const openModal = (item) => {
+        setSelectedItem(item);
+        setModalVisible(true);
+    };
+
+    const ItemModal = ({ item, visible, onClose }) => (
+        <Modal
+            animationType="slide"
+            transparent={true}
+            visible={visible}
+            onRequestClose={onClose}
+        >
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                    <TouchableOpacity 
+                        style={styles.backButton} 
+                        onPress={onClose}
+                    >
+                        <Ionicons name="arrow-back" size={24} color="#BCABAB" />
+                    </TouchableOpacity>
+                    <Image source={item?.src} style={styles.modalImage} />
+                    <View style={styles.modalInfo}>
+                        <Text style={styles.modalTitle}>Item Details</Text>
+                        <Text style={styles.modalDetails}>Quantity: 2 left</Text>
+                        <Text style={styles.modalDetails}>Expiry: 12/31/2024</Text>
+                    </View>
+                </View>
+            </View>
+        </Modal>
+    );
+
     const renderItem = ({ item }) => (
         <View style={styles.imageBackground}>
-             <Image source={item.src} style={styles.image} />
+            <TouchableOpacity onPress={() => openModal(item)}>
+            <Image 
+                source={item.src} 
+                style={styles.image} 
+            />
+            </TouchableOpacity>
+             
         </View>
        
     );
@@ -82,10 +122,15 @@ const Recipe = () => {
                     renderItem={renderItem}
                     keyExtractor={item => item.id}
                     numColumns={isMobile ? 1 : 3 }
-                    columnWrapperStyle={styles.row}
                     contentContainerStyle={{ paddingBottom: 100 }}
                 />
             </View>
+
+            <ItemModal 
+                item={selectedItem}
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+            />
 
         </View>
     );
@@ -119,14 +164,17 @@ const styles = StyleSheet.create({
         backgroundColor: '#373030',
         borderRadius: 30,
         marginVertical: 20,
+        alignItems: 'center',
+        paddingHorizontal: 12,
     },
     searchIcon: {
-        padding: 10,
+        padding: 12,
     },
     input: {
-       flex: 1,
-       padding: 10,
-       color: '#BCABAB',
+        flex: 1,
+        padding: 12,
+        color: '#BCABAB',
+        fontSize: 16,
     },
     categoryText: {
         marginStart: 20,
@@ -148,6 +196,51 @@ const styles = StyleSheet.create({
         borderRadius: 25,
         margin: 20,
         justifyContent: 'center',
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    modalContent: {
+        width: isMobile ? '90%' : '60%',
+        backgroundColor: '#685858',
+        borderRadius: 25,
+        padding: 20,
+        alignItems: 'center',
+        position: 'relative',
+        height:700,
+        width: 500,
+    },
+    modalImage: {
+        width: 200,
+        height: 200,
+        borderRadius: 25,
+        marginVertical: 20,
+    },
+    modalInfo: {
+        width: '100%',
+        alignItems: 'center',
+    },
+    modalTitle: {
+        fontFamily: 'Montaga',
+        fontSize: 24,
+        color: '#ffffff',
+        marginBottom: 10,
+    },
+    modalDetails: {
+        fontFamily: 'Montaga',
+        fontSize: 18,
+        color: '#BCABAB',
+        marginBottom: 5,
+    },
+    backButton: {
+        position: 'absolute',
+        top: 20,
+        left: 20,
+        padding: 10,
+        zIndex: 1,
     },
 });
 

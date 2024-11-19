@@ -30,7 +30,9 @@ const Pantry = () => {
     }
 
     const renderItem = ({ item }) => (
-        <Image source={item.src} style={styles.image} />
+        <View style={styles.imageBackground}>
+            <Image source={item.src} style={styles.image} />
+        </View>
     );
 
     return (
@@ -79,13 +81,16 @@ const Pantry = () => {
                         <Text style={styles.categoryText}>canned goods</Text>
                         <Text style={styles.categoryText}>oils</Text>
                         <Text style={styles.categoryText}>peppers</Text>
+                        <Text style={styles.categoryText}>fruits</Text>
+                        <Text style={styles.categoryText}>vegetables</Text>
+                        <Text style={styles.categoryText}>meats</Text>
                     </View>
                 </ScrollView>
                 </View>
               
 
                 {/* Images */}
-               <View style={{paddingBottom: 250, flex: 1}}>
+               <View style={{paddingBottom: 250, flex: isMobile? 0 : 1}}>
                 <FlatList
                         data={imageSources}
                         renderItem={renderItem}
@@ -107,7 +112,6 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#524242',
-        alignItems: 'flex-left',
         padding: 20,
     },
     title: {
@@ -131,14 +135,17 @@ const styles = StyleSheet.create({
         backgroundColor: '#373030',
         borderRadius: 30,
         marginVertical: 20,
+        alignItems: 'center',
+        paddingHorizontal: 12,
     },
     searchIcon: {
-        padding: 10,
+        padding: 12,
     },
     input: {
-       flex: 1,
-       padding: 10,
-       color: '#BCABAB',
+        flex: 1,
+        padding: 12,
+        color: '#BCABAB',
+        fontSize: 16,
     },
     row: {
         justifyContent: 'space-evenly',
@@ -154,6 +161,10 @@ const styles = StyleSheet.create({
         height: 199,
         marginBottom: 20,
         borderRadius: 20,
+    },
+    imageBackground: {
+        margin: 20,
+        justifyContent: 'center',
     },
 });
 
