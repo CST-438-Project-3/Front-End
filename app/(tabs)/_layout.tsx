@@ -14,6 +14,8 @@ const tabs = () => {
             tabBarStyle: {
                 backgroundColor: '#373030',
                 borderTopWidth: 0,
+                height: 60,
+                display: isMobile? 'flex' : 'none',
                 },
             tabBarShowLabel: false,
             headerShown: false,
@@ -22,9 +24,9 @@ const tabs = () => {
         <Tabs.Screen name="index" options={{title: 'Home',  tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'home-sharp' : 'home-outline'} color={color} size={24} />
           ),}} />   
-        <Tabs.Screen name="recipe" options={{tabBarIcon:({color})=> {
-          return <Ionicons name="list" size={24} color={color} />
-        }}} /> 
+        <Tabs.Screen name="recipe" options={{tabBarIcon:({color})=> (
+          <Ionicons name="list" size={24} color={color} />
+        ),}} /> 
         {/* <Tabs.Screen name="restock" options={{}} />  */}
       </Tabs>
   );
