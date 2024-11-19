@@ -45,8 +45,12 @@ const Pantry = () => {
                     <Link href="/recipe" style={styles.navText}>
                         <Text >recipes</Text>
                     </Link>
-                    <Text style={styles.navText}>restock</Text>
-                    <Text style={styles.navText}>favorites</Text>
+                    <Link href="/restock" style={styles.navText}>
+                        <Text >restock</Text>
+                    </Link>
+                    <Link href="/favorites" style={styles.navText}>
+                        <Text >favorites</Text>
+                    </Link>
                 </View>
             </View>
            
