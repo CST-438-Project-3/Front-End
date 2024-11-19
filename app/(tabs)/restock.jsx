@@ -97,7 +97,9 @@ const Restock = () => {
 
                 {/* Navigation */}
                 <View style={{flexDirection: 'row', justifyContent: 'space-between', marginEnd: 50, display: isMobile ? 'none' : 'flex'}}>
-                    <Text style={styles.navText}>my pantry</Text>
+                <Link href="/" style={styles.navText}>
+                        <Text>my pantry</Text>
+                    </Link>
                     <Link href="/recipe" style={styles.navText}>
                         <Text >recipes</Text>
                     </Link>
