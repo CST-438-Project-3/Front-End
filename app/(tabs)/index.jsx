@@ -85,7 +85,7 @@ const Pantry = () => {
               
 
                 {/* Images */}
-               <View style={{paddingBottom: 250, flex: 1}}>
+               <View style={{paddingBottom: 250}}>
                 <FlatList
                         data={imageSources}
                         renderItem={renderItem}
@@ -131,14 +131,17 @@ const styles = StyleSheet.create({
         backgroundColor: '#373030',
         borderRadius: 30,
         marginVertical: 20,
+        alignItems: 'center',
+        paddingHorizontal: 12,
     },
     searchIcon: {
-        padding: 10,
+        padding: 12,
     },
     input: {
-       flex: 1,
-       padding: 10,
-       color: '#BCABAB',
+        flex: 1,
+        padding: 12,
+        color: '#BCABAB',
+        fontSize: 16,
     },
     row: {
         justifyContent: 'space-evenly',
