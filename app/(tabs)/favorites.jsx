@@ -7,19 +7,21 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 const { width } = Dimensions.get('window');
 const isMobile = width < 600;
 
+// categories array
+const categories = [
+    'papers',
+    'oils',
+    'canned goods',
+    'spices'
+];
+
 const favoriteItems = [
-    { id: '1', src: require('../../assets/images/index.png') },
-    { id: '2', src: require('../../assets/images/index.png') },
-    { id: '3', src: require('../../assets/images/index.png') },
-    { id: '4', src: require('../../assets/images/index.png') },
-    { id: '5', src: require('../../assets/images/index.png') },
-    { id: '6', src: require('../../assets/images/index.png') },
-    { id: '7', src: require('../../assets/images/index.png') },
-    { id: '8', src: require('../../assets/images/index.png') },
-    { id: '9', src: require('../../assets/images/index.png') },
-    { id: '10', src: require('../../assets/images/index.png') },
-    { id: '11', src: require('../../assets/images/index.png') },
-    { id: '12', src: require('../../assets/images/index.png') },
+    { id: '1', src: require('../../assets/images/index.png'), category: 'papers', title: 'Paper Towels' },
+    { id: '2', src: require('../../assets/images/index.png'), category: 'oils', title: 'Olive Oil' },
+    { id: '3', src: require('../../assets/images/index.png'), category: 'canned goods', title: 'Tomatoes' },
+    { id: '4', src: require('../../assets/images/index.png'), category: 'spices', title: 'Basil' },
+    { id: '5', src: require('../../assets/images/index.png'), category: 'papers', title: 'Napkins' },
+    { id: '6', src: require('../../assets/images/index.png'), category: 'oils', title: 'Coconut Oil' },
 ];
 
 const Favorites = () => {
@@ -28,12 +30,26 @@ const Favorites = () => {
     });
     const [selectedItem, setSelectedItem] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState(null);
+    const [filteredItems, setFilteredItems] = useState(favoriteItems);
 
     if (!fontsLoaded) return null;
 
     const openModal = (item) => {
         setSelectedItem(item);
         setModalVisible(true);
+    };
+
+    // Add category filter function
+    const handleCategoryFilter = (category) => {
+        setSelectedCategory(category);
+        // Insert API call : filter items
+        if (category) {
+            const filtered = favoriteItems.filter(item => item.category === category);
+            setFilteredItems(filtered);
+        } else {
+            setFilteredItems(favoriteItems);
+        }
     };
 
     const ItemModal = ({ item, visible, onClose }) => (
@@ -53,9 +69,8 @@ const Favorites = () => {
                     </TouchableOpacity>
                     <Image source={item?.src} style={styles.modalImage} />
                     <View style={styles.modalInfo}>
-                        <Text style={styles.modalTitle}>Item Details</Text>
-                        <Text style={styles.modalDetails}>Favorite Recipe</Text>
-                        <Text style={styles.modalDetails}>Rating: 5/5</Text>
+                        <Text style={styles.modalTitle}>{item?.title}</Text>
+                        <Text style={styles.modalDetails}>Category: {item?.category}</Text>
                     </View>
                 </View>
             </View>
@@ -65,7 +80,7 @@ const Favorites = () => {
     const renderGrid = (startIndex) => (
         <View style={styles.gridContainer}>
             <View style={styles.gridRow}>
-                {favoriteItems.slice(startIndex, startIndex + 3).map((item) => (
+                {filteredItems.slice(startIndex, startIndex + 3).map((item) => (
                     <TouchableOpacity 
                         key={item.id} 
                         style={styles.imageBackground}
@@ -76,7 +91,7 @@ const Favorites = () => {
                 ))}
             </View>
             <View style={styles.gridRow}>
-                {favoriteItems.slice(startIndex + 3, startIndex + 6).map((item) => (
+                {filteredItems.slice(startIndex + 3, startIndex + 6).map((item) => (
                     <TouchableOpacity 
                         key={item.id} 
                         style={styles.imageBackground}
@@ -114,7 +129,6 @@ const Favorites = () => {
                     {/* Username */}
                     <View style={styles.titleRow}>
                         <Text style={styles.username}>Favorites</Text>
-                        <Ionicons name="heart" size={isMobile ? 32 : 40} color="#BCABAB"/>
                     </View>
 
                     {/* Search bar */}
@@ -122,19 +136,39 @@ const Favorites = () => {
                         <Ionicons style={styles.searchIcon} name="search" size={24} color="#BCABAB" />
                         <TextInput 
                             style={styles.input}
+                            placeholder="Search favorites..."
                             placeholderTextColor="#BCABAB"
                         />
                     </View>
                 </View>
 
-                {/* Scrollable Content */}
-                <ScrollView 
-                    horizontal 
-                    showsHorizontalScrollIndicator={true}
-                    contentContainerStyle={styles.scrollContainer}
-                >
-                    {[0, 6].map((startIndex) => renderGrid(startIndex))}
-                </ScrollView>
+                {/* Main Content Area */}
+                <View style={styles.mainContentContainer}>
+                    {/* Categories */}
+                    <View style={styles.categoriesContainer}>
+                        {categories.map((category) => (
+                            <TouchableOpacity 
+                                key={category}
+                                style={[
+                                    styles.categoryButton,
+                                    selectedCategory === category && styles.selectedCategory
+                                ]}
+                                onPress={() => handleCategoryFilter(category)}
+                            >
+                                <Text style={styles.categoryText}>{category}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+
+                    {/* Scrollable Content */}
+                    <ScrollView 
+                        horizontal 
+                        showsHorizontalScrollIndicator={true}
+                        contentContainerStyle={styles.scrollContainer}
+                    >
+                        {[0, 6].map((startIndex) => renderGrid(startIndex))}
+                    </ScrollView>
+                </View>
             </View>
 
             <ItemModal 
@@ -152,7 +186,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#524242',
     },
     content: {
-        width: '100%',
+        flex: 1,
         paddingLeft: 20,
     },
     headerSection: {
@@ -175,8 +209,31 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 20,
     },
+    mainContentContainer: {
+        flex: 1,
+        flexDirection: 'row',
+    },
+    categoriesContainer: {
+        width: 100,
+        backgroundColor: '#373030',
+        borderRadius: 15,
+        paddingVertical: 20,
+        marginRight: 20,
+    },
+    categoryButton: {
+        paddingVertical: 15,
+        paddingHorizontal: 10,
+    },
+    categoryText: {
+        fontFamily: 'Montaga',
+        fontSize: 16,
+        color: '#BCABAB',
+        textAlign: 'center',
+    },
+    selectedCategory: {
+        backgroundColor: '#524242',
+    },
     scrollContainer: {
-        left: 1200, 
         paddingRight: 40,
     },
     title: {
