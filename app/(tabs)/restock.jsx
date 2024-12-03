@@ -7,19 +7,21 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 const { width } = Dimensions.get('window');
 const isMobile = width < 600;
 
+// categories array
+const categories = [
+    'papers',
+    'oils',
+    'canned goods',
+    'spices'
+];
+
 const restockItems = [
-    { id: '1', src: require('../../assets/images/index.png') },
-    { id: '2', src: require('../../assets/images/index.png') },
-    { id: '3', src: require('../../assets/images/index.png') },
-    { id: '4', src: require('../../assets/images/index.png') },
-    { id: '5', src: require('../../assets/images/index.png') },
-    { id: '6', src: require('../../assets/images/index.png') },
-    { id: '7', src: require('../../assets/images/index.png') },
-    { id: '8', src: require('../../assets/images/index.png') },
-    { id: '9', src: require('../../assets/images/index.png') },
-    { id: '10', src: require('../../assets/images/index.png') },
-    { id: '11', src: require('../../assets/images/index.png') },
-    { id: '12', src: require('../../assets/images/index.png') },
+    { id: '1', src: require('../../assets/images/index.png'), category: 'papers' },
+    { id: '2', src: require('../../assets/images/index.png'), category: 'oils' },
+    { id: '3', src: require('../../assets/images/index.png'), category: 'canned goods' },
+    { id: '4', src: require('../../assets/images/index.png'), category: 'spices' },
+    { id: '5', src: require('../../assets/images/index.png'), category: 'papers' },
+    { id: '6', src: require('../../assets/images/index.png'), category: 'oils' },
 ];
 
 const Restock = () => {
@@ -28,12 +30,26 @@ const Restock = () => {
     });
     const [selectedItem, setSelectedItem] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
+    const [selectedCategory, setSelectedCategory] = useState(null);
+    const [filteredItems, setFilteredItems] = useState(restockItems);
 
     if (!fontsLoaded) return null;
 
     const openModal = (item) => {
         setSelectedItem(item);
         setModalVisible(true);
+    };
+
+    // Add category filter function
+    const handleCategoryFilter = (category) => {
+        setSelectedCategory(category);
+        // Insert API call here to filter items
+        if (category) {
+            const filtered = restockItems.filter(item => item.category === category);
+            setFilteredItems(filtered);
+        } else {
+            setFilteredItems(restockItems);
+        }
     };
 
     const ItemModal = ({ item, visible, onClose }) => (
@@ -65,7 +81,7 @@ const Restock = () => {
     const renderGrid = (startIndex) => (
         <View style={styles.gridContainer}>
             <View style={styles.gridRow}>
-                {restockItems.slice(startIndex, startIndex + 3).map((item) => (
+                {filteredItems.slice(startIndex, startIndex + 3).map((item) => (
                     <TouchableOpacity 
                         key={item.id} 
                         style={styles.imageBackground}
@@ -76,7 +92,7 @@ const Restock = () => {
                 ))}
             </View>
             <View style={styles.gridRow}>
-                {restockItems.slice(startIndex + 3, startIndex + 6).map((item) => (
+                {filteredItems.slice(startIndex + 3, startIndex + 6).map((item) => (
                     <TouchableOpacity 
                         key={item.id} 
                         style={styles.imageBackground}
@@ -111,8 +127,15 @@ const Restock = () => {
                     </Link>
                 </View>
             </View>
-           
-
+                    {/* Search bar */}
+                    <View style={styles.searchSection}>
+                        <Ionicons style={styles.searchIcon} name="search" size={24} color="#BCABAB" />
+                        <TextInput 
+                            style={styles.input}
+                            placeholder="Search items..."
+                            placeholderTextColor="#BCABAB"
+                        />
+                    </View>
             {/* Username */}
             <View style={{flexDirection:'row', justifyContent:'space-between', alignItems: 'center'}}>
                 <Text style={styles.username}>Restock</Text>
@@ -131,14 +154,33 @@ const Restock = () => {
                 <View style={styles.headerSection}>
                 </View>
 
-                {/* Scrollable Content */}
-                <ScrollView 
-                    horizontal 
-                    showsHorizontalScrollIndicator={true}
-                    contentContainerStyle={styles.scrollContainer}
-                >
-                    {[0, 6].map((startIndex) => renderGrid(startIndex))}
-                </ScrollView>
+                {/* Main Content Area */}
+                <View style={styles.mainContentContainer}>
+                    {/* Categories */}
+                    <View style={styles.categoriesContainer}>
+                        {categories.map((category) => (
+                            <TouchableOpacity 
+                                key={category}
+                                style={[
+                                    styles.categoryButton,
+                                    selectedCategory === category && styles.selectedCategory
+                                ]}
+                                onPress={() => handleCategoryFilter(category)}
+                            >
+                                <Text style={styles.categoryText}>{category}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+
+                    {/* Scrollable Content */}
+                    <ScrollView 
+                        horizontal 
+                        showsHorizontalScrollIndicator={true}
+                        contentContainerStyle={styles.scrollContainer}
+                    >
+                        {[0, 6].map((startIndex) => renderGrid(startIndex))}
+                    </ScrollView>
+                </View>
             </View>
 
             <ItemModal 
@@ -174,7 +216,7 @@ const styles = StyleSheet.create({
         color: '#ffffff',
     },
     content: {
-        width: '100%',
+        flex: 1,
         paddingLeft: 20,
     },
     headerSection: {
@@ -197,8 +239,31 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginTop: 20,
     },
+    mainContentContainer: {
+        flex: 1,
+        flexDirection: 'row',
+    },
+    categoriesContainer: {
+        width: 100,
+        backgroundColor: '#373030',
+        borderRadius: 15,
+        paddingVertical: 20,
+        marginRight: 20,
+    },
+    categoryButton: {
+        paddingVertical: 15,
+        paddingHorizontal: 10,
+    },
+    categoryText: {
+        fontFamily: 'Montaga',
+        fontSize: 16,
+        color: '#BCABAB',
+        textAlign: 'center',
+    },
+    selectedCategory: {
+        backgroundColor: '#524242',
+    },
     scrollContainer: {
-        left: 1200, 
         paddingRight: 40,
     },
     searchSection: {
@@ -252,7 +317,7 @@ const styles = StyleSheet.create({
         padding: 20,
         alignItems: 'center',
         position: 'relative',
-        height:700,
+        height: 700,
         width: 500,
     },
     modalImage: {

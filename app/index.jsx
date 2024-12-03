@@ -9,9 +9,7 @@ const isMobile = width < 600;
 
 const Index = () => {
   const [fontsLoaded] = useFonts({
-    Montserrat: require('../assets/fonts/Montserrat-Regular.ttf'),
-    MontserratBold: require('../assets/fonts/Montserrat-Bold.ttf'),
-    MontserratSemiBold: require('../assets/fonts/Montserrat-SemiBold.ttf'), 
+    'Montaga': require('../assets/fonts/Montaga-Regular.ttf'),
   });
 
   useEffect(() => {
@@ -25,95 +23,90 @@ const Index = () => {
     return null;
   }
 
-  // const navigation = useNavigation();
-
   return (
     <ImageBackground
-      source={require('@/assets/images/index.png')}
+      source={require('../assets/images/index.png')}
       resizeMode="cover"
       style={styles.image}
     >
-      <View style={{ margin: isMobile ? 10 : 20}}>
+      {/* Dark overlay */}
+      <View style={styles.overlay} />
+      
+      <View style={styles.contentContainer}>
         <View style={styles.header}>
-          <Text style={[styles.title, { fontSize: isMobile ? 48 : 100 }]}>PantryPal</Text>
+          <Text style={styles.title}>PantryPal</Text>
         </View>
-        <View>
-          <Text style={[styles.subtitle, { fontSize: isMobile ? 25 : 36 }]}>
-            Smart Pantry Management Made Simple
+        <View style={styles.textContainer}>
+          <Text style={styles.subtitle} adjustsFontSizeToFit>
+            Smart Pantry{'\n'}
+            Management Made{'\n'}
+            Simple
           </Text>
         </View>
         <View style={styles.buttonContainer}>
-          <Link href="/SignUp" style={styles.button}>
-            <Text style={{ fontFamily:"MontserratSemiBold",textAlign: "center", fontSize: isMobile ? 18 : 27 }}>Get Started</Text>
+          <Link href="/SignUp" asChild>
+            <Pressable style={styles.button}>
+              <Text style={styles.buttonText}>Get Started</Text>
+            </Pressable>
           </Link>
-          {/* <Pressable
-            onPress={() => navigation.navigate('SignUp')}
-            style={[styles.button, isMobile ? styles.mobileButton : {}]}
-          >
-            <Text style={{ textAlign: "center", fontSize: isMobile ? 18 : 27 }}>Get Started</Text>
-          </Pressable> */}
-          <Pressable onPress={() => {}} style={[styles.existingUserButton, isMobile ? styles.mobileExistingUserButton : {}]}>
-            <Text style={styles.existingUserText}>Existing User</Text>
-          </Pressable>
         </View>
       </View>
     </ImageBackground>
   );
 };
 
-export default Index;
-
 const styles = StyleSheet.create({
-  container: {
-    margin: 20,
-  },
   image: {
     width: "100%",
     flex: 1,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+  },
+  contentContainer: {
+    flex: 1,
+    padding: isMobile ? 20 : 40,
     justifyContent: 'center',
   },
   header: {
-    alignItems: "flex-start",
-    paddingTop: 60, 
-    marginBottom: 40,
+    marginBottom: 20,
   },
   title: {
     color: "#FFFFFF",
-    marginBottom: 20,
-    fontFamily: "MontserratBold",
+    fontSize: isMobile ? 48 : 64,
+    fontFamily: 'Montaga',
+    marginBottom: 10,
+  },
+  textContainer: {
+    marginBottom: 40,
   },
   subtitle: {
     color: "#FFFFFF",
-    fontFamily: "Montserrat",
+    fontSize: isMobile ? 22 : 28,
+    fontFamily: 'Montaga',
+    lineHeight: isMobile ? 36 : 44,
+    letterSpacing: 1,
+    fontWeight: '200', // i made it thinner
+    opacity: 0.9, // overlay
   },
   buttonContainer: {
-    justifyContent: "space-around",
-    alignItems: "flex-start",
-    marginTop: 30,
+    marginTop: 20,
   },
   button: {
-    backgroundColor: "#D9D9D9",
-    textAlign: "center",
-    alignContent: "center",
-    justifyContent: "center",
+    backgroundColor: "#FFFFFF",
+    paddingVertical: isMobile ? 12 : 16,
+    paddingHorizontal: isMobile ? 24 : 32,
     borderRadius: 50,
-    width: 316,
-    height: 74,
-    color: "#4A3424",
+    width: isMobile ? 200 : 250,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  mobileButton: {
-    width: 200,
-    height: 50,
-  },
-  existingUserButton: {
-    width: 316,
-    marginTop: 10,
-  },
-  mobileExistingUserButton: {
-    width: 200,
-  },
-  existingUserText: {
-    textAlign: "center",
-    color: "#FFFFFF",
+  buttonText: {
+    color: "#524242",
+    fontSize: isMobile ? 16 : 20,
+    fontFamily: 'Montaga',
   },
 });
+
+export default Index;
