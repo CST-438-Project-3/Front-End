@@ -105,7 +105,7 @@ const Favorites = () => {
     );
 
     return (
-        <View style={styles.container}>
+        <><View style={styles.container}>
             <View style={styles.content}>
                 <View style={styles.headerSection}>
                     {/* Title */}
@@ -134,56 +134,53 @@ const Favorites = () => {
                     {/* Search bar */}
                     <View style={styles.searchSection}>
                         <Ionicons style={styles.searchIcon} name="search" size={24} color="#BCABAB" />
-                        <TextInput 
+                        <TextInput
                             style={styles.input}
                             placeholder="Search favorites..."
-                            placeholderTextColor="#BCABAB"
-                        />
+                            placeholderTextColor="#BCABAB" />
                     </View>
                 </View>
             </View>
-           
+
 
             {/* Username */}
-            <View style={{flexDirection:'row', justifyContent:'space-between', alignItems: 'center'}}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
                 <Text style={styles.username}>Favorites</Text>
-                <Ionicons name="heart" size={40} color="#BCABAB"/>
+                <Ionicons name="heart" size={40} color="#BCABAB" />
             </View>
-                {/* Main Content Area */}
-                <View style={styles.mainContentContainer}>
-                    {/* Categories */}
-                    <View style={styles.categoriesContainer}>
-                        {categories.map((category) => (
-                            <TouchableOpacity 
-                                key={category}
-                                style={[
-                                    styles.categoryButton,
-                                    selectedCategory === category && styles.selectedCategory
-                                ]}
-                                onPress={() => handleCategoryFilter(category)}
-                            >
-                                <Text style={styles.categoryText}>{category}</Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-
-                    {/* Scrollable Content */}
-                    <ScrollView 
-                        horizontal 
-                        showsHorizontalScrollIndicator={true}
-                        contentContainerStyle={styles.scrollContainer}
-                    >
-                        {[0, 6].map((startIndex) => renderGrid(startIndex))}
-                    </ScrollView>
+            {/* Main Content Area */}
+            <View style={styles.mainContentContainer}>
+                {/* Categories */}
+                <View style={styles.categoriesContainer}>
+                    {categories.map((category) => (
+                        <TouchableOpacity
+                            key={category}
+                            style={[
+                                styles.categoryButton,
+                                selectedCategory === category && styles.selectedCategory
+                            ]}
+                            onPress={() => handleCategoryFilter(category)}
+                        >
+                            <Text style={styles.categoryText}>{category}</Text>
+                        </TouchableOpacity>
+                    ))}
                 </View>
-            </View>
 
-            <ItemModal 
+                {/* Scrollable Content */}
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={true}
+                    contentContainerStyle={styles.scrollContainer}
+                >
+                    {[0, 6].map((startIndex) => renderGrid(startIndex))}
+                </ScrollView>
+            </View>
+        </View>
+        <ItemModal
                 item={selectedItem}
                 visible={modalVisible}
-                onClose={() => setModalVisible(false)}
-            />
-        </View>
+                onClose={() => setModalVisible(false)} />
+        </>
     );
 };
 

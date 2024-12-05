@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     View, 
     Text, 
@@ -11,6 +11,10 @@ import {
 import { useRouter } from "expo-router";
 import * as Google from 'expo-auth-session/providers/google';
 import { useFonts } from 'expo-font';
+import * as AuthSession from 'expo-auth-session';
+
+
+
 
 const SignUp = () => {
     const [email, setEmail] = useState('');
@@ -23,20 +27,32 @@ const SignUp = () => {
     });
 
     const [request, response, promptAsync] = Google.useAuthRequest({
-        clientId: '698834273975-7pg91b1vub04e2rtbtn6sleghqq6lkrf.apps.googleusercontent.com',
-        iosClientId: '698834273975-sf9t82034o2l5sgci68je6nikd3el92b.apps.googleusercontent.com'
+        // iosClientId: '698834273975-sf9t82034o2l5sgci68je6nikd3el92b.apps.googleusercontent.com',
+        webClientId: '202206752864-mnidsm98e3ehm6th5sb8qpvrojn7potk.apps.googleusercontent.com',
+        redirectUri: AuthSession.makeRedirectUri({
+            useProxy: true,
+        }),
     });
 
     const handleGoogleSignIn = async () => {
+        console.log('Google Sign In Request:', request);
         try {
             const result = await promptAsync();
             if (result?.type === 'success') {
-                router.push('/pantry');
+                console.log('Google Sign In Success:', result);
+                // router.push('/(tabs)');
             }
         } catch (error) {
             console.error('Google Sign In Error:', error);
         }
     };
+
+    useEffect(() => {
+        if (response?.type === 'success') {
+          const { authentication } = response;
+          console.log('Token:', authentication.accessToken);
+        }
+      }, [response]);
 
     const handleSubmit = () => {
         setShowModal(true);

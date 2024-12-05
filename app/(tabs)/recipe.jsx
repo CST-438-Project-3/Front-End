@@ -45,7 +45,6 @@ const Recipe = () => {
     }
 
     const [selectedItem, setSelectedItem] = useState(null);
-    const [modalVisible, setModalVisible] = useState(false);
 
     const openModal = (item) => {
         setSelectedItem(item);
