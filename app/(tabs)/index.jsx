@@ -123,6 +123,7 @@ const Index = () => {
                         />
                     </View>
                 </View>
+
                 {/* Main Content Area */}
                 <View style={styles.mainContentContainer}>
                     {/* Categories */}
@@ -332,10 +333,6 @@ const styles = StyleSheet.create({
         fontFamily: 'Montaga',
         color: '#BCABAB',
         fontSize: 16,
-    },
-    imageBackground: {
-        margin: 20,
-        justifyContent: 'center',
     },
 });
 
