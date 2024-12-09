@@ -141,7 +141,14 @@ const Favorites = () => {
                         />
                     </View>
                 </View>
+            </View>
+           
 
+            {/* Username */}
+            <View style={{flexDirection:'row', justifyContent:'space-between', alignItems: 'center'}}>
+                <Text style={styles.username}>Favorites</Text>
+                <Ionicons name="heart" size={40} color="#BCABAB"/>
+            </View>
                 {/* Main Content Area */}
                 <View style={styles.mainContentContainer}>
                     {/* Categories */}
@@ -184,6 +191,19 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#524242',
+        alignItems: 'flex-left',
+        padding: 20,
+    },
+    title: {
+        fontFamily: 'Montaga',
+        fontSize: 46,
+        color: '#BCABAB',
+    },
+    navText: {
+        fontFamily: 'Montaga',
+        fontSize: 26,
+        color: '#BCABAB',
+        margin: 20,
     },
     content: {
         flex: 1,
@@ -236,20 +256,9 @@ const styles = StyleSheet.create({
     scrollContainer: {
         paddingRight: 40,
     },
-    title: {
-        fontFamily: 'Montaga',
-        fontSize: isMobile ? 36 : 46,
-        color: '#BCABAB',
-    },
-    navText: {
-        fontFamily: 'Montaga',
-        fontSize: isMobile ? 22 : 26,
-        color: '#BCABAB',
-        margin: 20,
-    },
     username: {
         fontFamily: 'Montaga',
-        fontSize: isMobile ? 42 : 56,
+        fontSize: 56,
         color: '#ffffff',
     },
     searchSection: {
