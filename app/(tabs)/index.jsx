@@ -1,107 +1,185 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, Dimensions, TextInput, ScrollView, Image, TouchableOpacity, Modal } from "react-native";
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, Dimensions, TextInput, ScrollView, TouchableOpacity, Modal } from "react-native";
 import { useFonts } from 'expo-font';
 import { Link, useRouter } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { usePantry } from '../hooks/usePantry';
 
 const { width } = Dimensions.get('window');
 const isMobile = width < 600;
 
 const categories = [
     'papers',
-    'oils',
-    'canned goods',
-    'spices'
-];
-
-const pantryItems = [
-    { id: '1', image: require('../../assets/images/index.png'), category: 'papers', title: 'Paper Towels' },
-    { id: '2', image: require('../../assets/images/index.png'), category: 'oils', title: 'Olive Oil' },
-    { id: '3', image: require('../../assets/images/index.png'), category: 'canned goods', title: 'Beans' },
-    { id: '4', image: require('../../assets/images/index.png'), category: 'spices', title: 'Basil' },
-    { id: '5', image: require('../../assets/images/index.png'), category: 'papers', title: 'Napkins' },
-    { id: '6', image: require('../../assets/images/index.png'), category: 'oils', title: 'Coconut Oil' },
+    'fruit',
+    'vegetable',
+    'meat',
+    'seafood',
+    'dairy',
+    'grain',
+    'condiment'
 ];
 
 const Index = () => {
+    const { fetchItems } = usePantry();
+    
+    console.log('Index component rendering');
+
     const [selectedCategory, setSelectedCategory] = useState(null);
-    const [filteredItems, setFilteredItems] = useState(pantryItems);
+    const [pantryItems, setPantryItems] = useState([]);
+    const [filteredItems, setFilteredItems] = useState([]);
     const [isUserModalVisible, setIsUserModalVisible] = useState(false);
+    const [isAddModalVisible, setIsAddModalVisible] = useState(false);
+    const [newItemData, setNewItemData] = useState({
+        item_name: '',
+        item_category: ''
+    });
+    const [isLoading, setIsLoading] = useState(true);
+    const [error, setError] = useState(null);
+    
     const router = useRouter();
+    const { addPantryItem } = usePantry();
 
     const [fontsLoaded] = useFonts({
         'Montaga': require('../../assets/fonts/Montaga-Regular.ttf'),
     });
 
-    if (!fontsLoaded) return null;
+    useEffect(() => {
+        const loadItems = async () => {
+            try {
+                setIsLoading(true);
+                setError(null);
+                console.log('Starting to load items...');
+                const items = await fetchItems();
+                console.log('Received items:', items);
+                
+                if (Array.isArray(items)) {
+                    setPantryItems(items);
+                    setFilteredItems(items);
+                } else {
+                    console.error('Received non-array data:', items);
+                    setError('Invalid data format received');
+                }
+            } catch (error) {
+                console.error('Error in loadItems:', error);
+                setError('Failed to load items: ' + error.message);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        
+        loadItems();
+    }, []);
+
+    if (!fontsLoaded) {
+        console.log('Fonts not loaded yet');
+        return null;
+    }
 
     const handleLogout = () => {
         setIsUserModalVisible(false);
         router.push('/logIn');
     };
 
+    const handleAddItem = async () => {
+        try {
+            console.log('Adding new item:', newItemData);
+            const newItem = await addPantryItem({
+                item_name: newItemData.pantryName,  // Use item_name
+                item_category: newItemData.category,  // Use item_category
+            });
+            console.log('Added item response:', newItem);
+            setPantryItems(prevItems => [...prevItems, newItem]);
+            setFilteredItems(prevItems => [...prevItems, newItem]);
+            setIsAddModalVisible(false);
+            setNewItemData({ pantryName: '', category: '' });
+        } catch (error) {
+            console.error('Failed to add item:', error);
+        }
+    };
+    
     const handleCategoryFilter = (category) => {
+        console.log('Filtering by category:', category);
         setSelectedCategory(category === selectedCategory ? null : category);
         if (category && category !== selectedCategory) {
-            const filtered = pantryItems.filter(item => item.category === category);
+            const filtered = pantryItems.filter(item => item.item_category === category);
+            console.log('Filtered items:', filtered);
             setFilteredItems(filtered);
         } else {
             setFilteredItems(pantryItems);
         }
     };
 
-    const renderGrid = (startIndex) => (
-        <View style={styles.gridContainer}>
-            <View style={styles.gridRow}>
-                {filteredItems.slice(startIndex, startIndex + 3).map((item) => (
-                    <TouchableOpacity 
-                        key={item.id} 
-                        style={styles.imageBackground}
-                    >
-                        <Image source={item.image} style={styles.image} />
-                    </TouchableOpacity>
-                ))}
+    const renderGrid = (startIndex) => {
+        if (!filteredItems?.length) {
+            return (
+                <View style={styles.gridContainer}>
+                    <Text style={[styles.itemTitle, { fontSize: 18, marginTop: 20 }]}>
+                        No items found
+                    </Text>
+                </View>
+            );
+        }
+    
+        return (
+            <View style={styles.gridContainer}>
+                <View style={styles.gridRow}>
+                    {filteredItems.slice(startIndex, startIndex + 3).map((item) => (
+                        <TouchableOpacity 
+                            key={item.item_id}  
+                            style={styles.imageBackground}
+                        >
+                            <Text style={styles.itemTitle}>{item.item_name}</Text>  
+                        </TouchableOpacity>
+                    ))}
+                </View>
             </View>
-            <View style={styles.gridRow}>
-                {filteredItems.slice(startIndex + 3, startIndex + 6).map((item) => (
-                    <TouchableOpacity 
-                        key={item.id} 
-                        style={styles.imageBackground}
-                    >
-                        <Image source={item.image} style={styles.image} />
-                    </TouchableOpacity>
-                ))}
+        );
+    };
+    
+
+    if (isLoading) {
+        return (
+            <View style={[styles.container, styles.centerContent]}>
+                <Text style={styles.loadingText}>Loading pantry items...</Text>
             </View>
-        </View>
-    );
+        );
+    }
+
+    if (error) {
+        return (
+            <View style={[styles.container, styles.centerContent]}>
+                <Text style={styles.errorText}>{error}</Text>
+            </View>
+        );
+    }
 
     return (
         <View style={styles.container}>
             <View style={styles.content}>
                 <View style={styles.headerSection}>
-                    {/* Title */}
                     <View style={styles.headerRow}>
                         <Text style={styles.title}>PantryPal</Text>
-                        {/* Navigation */}
                         <View style={styles.navigation}>
-                            <Text style={styles.navText}>my pantry</Text>
+                            <Text style={styles.navText}>pantry</Text>
                             <Link href="/recipe" style={styles.navText}>
-                                <Text>recipes</Text>
+                                <Text style={styles.navText}>recipes</Text>
                             </Link>
                             <Link href="/restock" style={styles.navText}>
-                                <Text>restock</Text>
+                                <Text style={styles.navText}>restock</Text>
                             </Link>
                             <Link href="/favorites" style={styles.navText}>
-                                <Text>favorites</Text>
+                                <Text style={styles.navText}>favorites</Text>
                             </Link>
                         </View>
                     </View>
 
-                    {/* Username and Controls */}
                     <View style={styles.titleRow}>
                         <Text style={styles.username}>username</Text>
                         <View style={styles.userControls}>
-                            <TouchableOpacity style={styles.addButton}>
+                            <TouchableOpacity 
+                                style={styles.addButton}
+                                onPress={() => setIsAddModalVisible(true)}
+                            >
                                 <Ionicons name="add" size={isMobile ? 32 : 40} color="#BCABAB"/>
                             </TouchableOpacity>
                             <TouchableOpacity 
@@ -113,7 +191,6 @@ const Index = () => {
                         </View>
                     </View>
 
-                    {/* Search bar */}
                     <View style={styles.searchSection}>
                         <Ionicons style={styles.searchIcon} name="search" size={24} color="#BCABAB" />
                         <TextInput 
@@ -124,9 +201,7 @@ const Index = () => {
                     </View>
                 </View>
 
-                {/* Main Content Area */}
                 <View style={styles.mainContentContainer}>
-                    {/* Categories */}
                     <View style={styles.categoriesContainer}>
                         {categories.map((category) => (
                             <TouchableOpacity 
@@ -142,18 +217,50 @@ const Index = () => {
                         ))}
                     </View>
 
-                    {/* Scrollable Content */}
                     <ScrollView 
                         horizontal 
                         showsHorizontalScrollIndicator={true}
                         contentContainerStyle={styles.scrollContainer}
                     >
-                        {[0, 6].map((startIndex) => renderGrid(startIndex))}
+                        {renderGrid(0)}
                     </ScrollView>
                 </View>
             </View>
 
-            {/* User Modal */}
+            <Modal
+                animationType="fade"
+                transparent={true}
+                visible={isAddModalVisible}
+                onRequestClose={() => setIsAddModalVisible(false)}
+            >
+                <TouchableOpacity 
+                    style={styles.modalOverlay}
+                    activeOpacity={1}
+                    onPress={() => setIsAddModalVisible(false)}
+                >
+                    <View style={styles.addModalContent}>
+                        <TextInput
+                            style={styles.modalInput}
+                            placeholder="Item Name"
+                            value={newItemData.item_name}
+                            onChangeText={(text) => setNewItemData({...newItemData, pantryName: text})}
+                        />
+                        <TextInput
+                            style={styles.modalInput}
+                            placeholder="Category"
+                            value={newItemData.item_category}
+                            onChangeText={(text) => setNewItemData({...newItemData, category: text})}
+                        />
+                        <TouchableOpacity 
+                            style={styles.addItemButton}
+                            onPress={handleAddItem}
+                        >
+                            <Text style={styles.addItemButtonText}>Add Item</Text>
+                        </TouchableOpacity>
+                    </View>
+                </TouchableOpacity>
+            </Modal>
+
             <Modal
                 animationType="fade"
                 transparent={true}
@@ -185,7 +292,12 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#524242',
     },
+    centerContent: {
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
     content: {
+        flex: 1,
         width: '100%',
         paddingLeft: 20,
     },
@@ -197,6 +309,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginTop: isMobile ? 32 : 40,
         alignItems: 'center',
+        paddingRight: 20,
     },
     navigation: {
         flexDirection: 'row',
@@ -212,6 +325,7 @@ const styles = StyleSheet.create({
     mainContentContainer: {
         flex: 1,
         flexDirection: 'row',
+        marginTop: 20,
     },
     categoriesContainer: {
         width: 100,
@@ -219,22 +333,25 @@ const styles = StyleSheet.create({
         borderRadius: 15,
         paddingVertical: 20,
         marginRight: 20,
+        alignSelf: 'flex-start',
     },
     categoryButton: {
         paddingVertical: 15,
         paddingHorizontal: 10,
-    },
-    categoryText: {
-        fontFamily: 'Montaga',
-        fontSize: 16,
-        color: '#BCABAB',
-        textAlign: 'center',
     },
     selectedCategory: {
         backgroundColor: '#524242',
     },
     scrollContainer: {
         paddingRight: 40,
+    },
+    gridContainer: {
+        flex: 1,
+        paddingRight: 20,
+    },
+    gridRow: {
+        flexDirection: 'row',
+        marginBottom: 20,
     },
     title: {
         fontFamily: 'Montaga',
@@ -268,13 +385,7 @@ const styles = StyleSheet.create({
         padding: 12,
         color: '#BCABAB',
         fontSize: 16,
-    },
-    gridContainer: {
-        marginRight: 40,
-    },
-    gridRow: {
-        flexDirection: 'row',
-        marginBottom: 20,
+        fontFamily: 'Montaga',
     },
     imageBackground: {
         width: 200,
@@ -285,26 +396,59 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
     },
-    image: {
-        width: 115,
-        height: 115,
-        borderRadius: 25,
+    categoryText: {
+        fontFamily: 'Montaga',
+        fontSize: 16,
+        color: '#BCABAB',
+        textAlign: 'center',
     },
     userControls: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 15,
     },
-    userButton: {
-        padding: 5,
-    },
-    addButton: {
-        padding: 5,
-    },
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
         justifyContent: 'flex-start',
+    },
+    loadingText: {
+        color: '#BCABAB',
+        fontSize: 18,
+        textAlign: 'center',
+        fontFamily: 'Montaga',
+    },
+    errorText: {
+        color: '#ff6b6b',
+        fontSize: 18,
+        textAlign: 'center',
+        fontFamily: 'Montaga',
+    },
+    modalInput: {
+        backgroundColor: '#ffffff',
+        padding: 12,
+        borderRadius: 8,
+        marginBottom: 10,
+        width: '100%',
+        fontFamily: 'Montaga',
+    },
+    addModalContent: {
+        position: 'absolute',
+        top: '30%',
+        left: '50%',
+        transform: [{translateX: -150}],
+        backgroundColor: '#373030',
+        borderRadius: 15,
+        padding: 20,
+        width: 300,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+        elevation: 5,
     },
     userModalContent: {
         position: 'absolute',
@@ -329,10 +473,33 @@ const styles = StyleSheet.create({
         padding: 10,
         gap: 10,
     },
+    addItemButton: {
+        backgroundColor: '#524242',
+        padding: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    addItemButtonText: {
+        color: '#BCABAB',
+        fontFamily: 'Montaga',
+        fontSize: 16,
+    },
+    itemTitle: {
+        color: '#BCABAB',
+        fontFamily: 'Montaga',
+        fontSize: 16,
+        textAlign: 'center'
+    },
     userModalText: {
         fontFamily: 'Montaga',
         color: '#BCABAB',
         fontSize: 16,
+    },
+    userButton: {
+        padding: 5,
+    },
+    addButton: {
+        padding: 5,
     },
 });
 
