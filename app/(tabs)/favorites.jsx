@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, Dimensions, TextInput, ScrollView, Image, Modal, TouchableOpacity } from "react-native";
 import { useFonts } from 'expo-font';
 import { Link } from 'expo-router';
@@ -7,22 +7,8 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 const { width } = Dimensions.get('window');
 const isMobile = width < 600;
 
-// categories array
-const categories = [
-    'papers',
-    'oils',
-    'canned goods',
-    'spices'
-];
+const userId = '1'; // change to user id
 
-const favoriteItems = [
-    { id: '1', src: require('../../assets/images/index.png'), category: 'papers', title: 'Paper Towels' },
-    { id: '2', src: require('../../assets/images/index.png'), category: 'oils', title: 'Olive Oil' },
-    { id: '3', src: require('../../assets/images/index.png'), category: 'canned goods', title: 'Tomatoes' },
-    { id: '4', src: require('../../assets/images/index.png'), category: 'spices', title: 'Basil' },
-    { id: '5', src: require('../../assets/images/index.png'), category: 'papers', title: 'Napkins' },
-    { id: '6', src: require('../../assets/images/index.png'), category: 'oils', title: 'Coconut Oil' },
-];
 
 const Favorites = () => {
     const [fontsLoaded] = useFonts({
@@ -30,8 +16,10 @@ const Favorites = () => {
     });
     const [selectedItem, setSelectedItem] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
+    const [categories, setCategories] = useState([]);
     const [selectedCategory, setSelectedCategory] = useState(null);
-    const [filteredItems, setFilteredItems] = useState(favoriteItems);
+    const [favoriteItems, setFavoriteItems] = useState([]);
+    const [filteredItems, setFilteredItems] = useState([]);
 
     if (!fontsLoaded) return null;
 
@@ -40,10 +28,60 @@ const Favorites = () => {
         setModalVisible(true);
     };
 
+    useEffect(() => {
+        const fetchFavoriteItems = async () => {
+            try {
+                const response = await fetch(`https://pantrypal15-1175d47ce25d.herokuapp.com/userItems/user/${userId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                const favorites = data.filter(item => item.isFavorite);
+                console.log('Favorites:', favorites);
+                return favorites;
+            } catch (error) {
+                console.error('Detailed error:', error);
+                return [];
+            }
+        };
+
+        const fetchFavoriteDetails = async (favorites) => {
+            console.log('Fetching details:');
+            const updatedFavorites = await Promise.all(favorites.map(async (item) => {
+                try {
+                    const response = await fetch(`https://pantrypal15-1175d47ce25d.herokuapp.com/items/${item.itemId}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    console.log('Item:', data);
+                    return {
+                        ...item,
+                        src: data.itemUrl,
+                        title: data.itemName,
+                        category: data.itemCategory,
+                    };
+                } catch (error) {
+                    console.error('Detailed error:', error);
+                    return item;
+                }
+            }));
+            setFavoriteItems(updatedFavorites);
+            setFilteredItems(updatedFavorites);
+
+            const categories = updatedFavorites.map(item => item.category);
+            const uniqueCategories = [...new Set(categories)];
+            setCategories(uniqueCategories);
+        };
+
+        fetchFavoriteItems().then(favorites => {
+            fetchFavoriteDetails(favorites);
+        });
+    }, []);
+
     // Add category filter function
     const handleCategoryFilter = (category) => {
         setSelectedCategory(category);
-        // Insert API call : filter items
         if (category) {
             const filtered = favoriteItems.filter(item => item.category === category);
             setFilteredItems(filtered);
@@ -67,7 +105,7 @@ const Favorites = () => {
                     >
                         <Ionicons name="arrow-back" size={24} color="#BCABAB" />
                     </TouchableOpacity>
-                    <Image source={item?.src} style={styles.modalImage} />
+                    <Image source={ {uri: item?.src} } style={styles.modalImage} />
                     <View style={styles.modalInfo}>
                         <Text style={styles.modalTitle}>{item?.title}</Text>
                         <Text style={styles.modalDetails}>Category: {item?.category}</Text>
@@ -77,32 +115,21 @@ const Favorites = () => {
         </Modal>
     );
 
-    const renderGrid = (startIndex) => (
-        <View style={styles.gridContainer}>
-            <View style={styles.gridRow}>
-                {filteredItems.slice(startIndex, startIndex + 3).map((item) => (
-                    <TouchableOpacity 
-                        key={item.id} 
-                        style={styles.imageBackground}
-                        onPress={() => openModal(item)}
-                    >
-                        <Image source={item.src} style={styles.image} />
-                    </TouchableOpacity>
-                ))}
-            </View>
-            <View style={styles.gridRow}>
-                {filteredItems.slice(startIndex + 3, startIndex + 6).map((item) => (
-                    <TouchableOpacity 
-                        key={item.id} 
-                        style={styles.imageBackground}
-                        onPress={() => openModal(item)}
-                    >
-                        <Image source={item.src} style={styles.image} />
-                    </TouchableOpacity>
-                ))}
-            </View>
-        </View>
-    );
+    // const renderGrid = () => (
+    //     <View style={styles.gridContainer}>
+    //         <View style={styles.gridRow}>
+    //             {filteredItems.map((item) => (
+    //                 <TouchableOpacity 
+    //                     key={item.id} 
+    //                     style={styles.imageBackground}
+    //                     onPress={() => openModal(item)}
+    //                 >
+    //                     <Image source={item.src} style={styles.image} />
+    //                 </TouchableOpacity>
+    //             ))}
+    //         </View>
+    //     </View>
+    // );
 
     return (
         <View style={styles.container}>
@@ -144,6 +171,7 @@ const Favorites = () => {
 
                 {/* Main Content Area */}
                 <View style={styles.mainContentContainer}>
+
                     {/* Categories */}
                     <View style={styles.categoriesContainer}>
                         {categories.map((category) => (
@@ -166,8 +194,32 @@ const Favorites = () => {
                         showsHorizontalScrollIndicator={true}
                         contentContainerStyle={styles.scrollContainer}
                     >
-                        {[0, 6].map((startIndex) => renderGrid(startIndex))}
+                        <View style={styles.gridContainer}>
+                            <View style={styles.gridRow}>
+                                {filteredItems.slice(0, Math.ceil(filteredItems.length / 2)).map((item, index) => (
+                                    <TouchableOpacity 
+                                        key={index} 
+                                        style={styles.imageBackground}
+                                        onPress={() => openModal(item)}
+                                    >
+                                        <Image source={{uri: item?.src} } style={styles.image} />
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                            <View style={styles.gridRow}>
+                                {filteredItems.slice(Math.ceil(filteredItems.length / 2)).map((item, index) => (
+                                    <TouchableOpacity 
+                                        key={index} 
+                                        style={styles.imageBackground}
+                                        onPress={() => openModal(item)}
+                                    >
+                                        <Image source={{uri: item?.src} } style={styles.image} />
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </View>
                     </ScrollView>
+
                 </View>
             </View>
 
