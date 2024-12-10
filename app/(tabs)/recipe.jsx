@@ -59,46 +59,43 @@ const Recipe = () => {
     );
 
     return (
-        <SafeAreaView style={styles.safeArea}>
-            <StatusBar barStyle="light-content" backgroundColor="#524242" />
+        
             <View style={styles.container}>
-                {/* Title and Navigation */}
-                <View style={styles.header}>
-                    <Text style={styles.title}>PantryPal</Text>
-                    {!isMobile && (
-                        <View style={styles.desktopNav}>
-                            <Link href="/" style={styles.navLink}>
-                                <Text style={styles.navText}>my pantry</Text>
+                <View style={styles.content}>
+                <View style={styles.headerSection}>
+                    {/* Title */}
+                    <View style={styles.headerRow}>
+                        <Text style={styles.title}>PantryPal</Text>
+                        {/* Navigation */}
+                        <View style={styles.navigation}>
+                            <Link href="/" style={styles.navText}>
+                                <Text>my pantry</Text>
                             </Link>
-                            <Link href="/recipe" style={styles.navLink}>
-                                <Text style={styles.navText}>recipes</Text>
+                            <Link href="/recipe" style={styles.navText}>
+                                <Text>recipes</Text>
                             </Link>
-                            <Link href="/restock" style={styles.navLink}>
-                                <Text style={styles.navText}>restock</Text>
-                            </Link>
-                            <Link href="/favorites" style={styles.navLink}>
-                                <Text style={styles.navText}>favorites</Text>
+                            <Text style={styles.navText}>restock</Text>
+                            <Link href="/favorites" style={styles.navText}>
+                                <Text>favorites</Text>
                             </Link>
                         </View>
-                    )}
-                </View>
+                    </View>
 
-                {/* Recipes Header */}
-                <View style={styles.recipesHeader}>
-                    <Text style={styles.recipesTitle}>Recipes</Text>
-                    <TouchableOpacity>
-                        <Ionicons name="add" size={32} color="#BCABAB"/>
-                    </TouchableOpacity>
-                </View>
+                    {/* Username */}
+                    <View style={styles.titleRow}>
+                        <Text style={styles.username}>Recipes</Text>
+                        <Ionicons name="add" size={isMobile ? 32 : 40} color="#BCABAB"/>
+                    </View>
 
-                {/* Search bar */}
-                <View style={styles.searchSection}>
-                    <Ionicons style={styles.searchIcon} name="search" size={20} color="#BCABAB" />
-                    <TextInput
-                        style={styles.input}
-                        placeholder="Search recipes..."
-                        placeholderTextColor="#BCABAB"
-                    />
+                    {/* Search bar */}
+                    <View style={styles.searchSection}>
+                        <Ionicons style={styles.searchIcon} name="search" size={24} color="#BCABAB" />
+                        <TextInput 
+                            style={styles.input}
+                            placeholder="Search items..."
+                            placeholderTextColor="#BCABAB"
+                        />
+                    </View>
                 </View>
 
                 {/* Subtitle */}
@@ -112,23 +109,6 @@ const Recipe = () => {
                     contentContainerStyle={styles.recipeList}
                 />
 
-                {/* Mobile Bottom Navigation */}
-                {isMobile && (
-                    <View style={styles.bottomNav}>
-                        <TouchableOpacity onPress={() => router.push('/')}>
-                            <Ionicons name="home-outline" size={24} color="#BCABAB" />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => router.push('/recipe')}>
-                            <Ionicons name="menu-outline" size={24} color="#BCABAB" />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => router.push('/restock')}>
-                            <Ionicons name="time-outline" size={24} color="#BCABAB" />
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={() => router.push('/favorites')}>
-                            <Ionicons name="heart-outline" size={24} color="#BCABAB" />
-                        </TouchableOpacity>
-                    </View>
-                )}
 
                 {/* Recipe Modal */}
                 <Modal
@@ -173,48 +153,57 @@ const Recipe = () => {
                                 </View>
                             )}
 
-                            {/* Bottom Navigation */}
-                            <View style={styles.bottomNav}>
-                                <TouchableOpacity onPress={() => { setModalVisible(false); router.push('/')}}>
-                                    <Ionicons name="home-outline" size={24} color="#BCABAB" />
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={() => { setModalVisible(false); router.push('/recipe')}}>
-                                    <Ionicons name="menu-outline" size={24} color="#BCABAB" />
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={() => { setModalVisible(false); router.push('/restock')}}>
-                                    <Ionicons name="time-outline" size={24} color="#BCABAB" />
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={() => { setModalVisible(false); router.push('/favorites')}}>
-                                    <Ionicons name="heart-outline" size={24} color="#BCABAB" />
-                                </TouchableOpacity>
-                            </View>
                         </View>
                     </SafeAreaView>
                 </Modal>
+                </View>
+                
             </View>
-        </SafeAreaView>
     );
 };
 
 const styles = StyleSheet.create({
-    safeArea: {
+    container: {
         flex: 1,
         backgroundColor: '#524242',
     },
-    container: {
+    content: {
         flex: 1,
-        padding: 20,
+        paddingLeft: 20,
     },
-    header: {
+    headerSection: {
+        paddingRight: 20,
+    },
+    headerRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginTop: isMobile ? 32 : 40,
+        alignItems: 'center',
+    },
+    navigation: {
+        flexDirection: 'row',
+        marginEnd: 50,
+        display: isMobile ? 'none' : 'flex',
+    },
+    titleRow: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 20,
+        marginTop: 20,
+    },
+    mainContentContainer: {
+        flex: 1,
+        flexDirection: 'row',
     },
     title: {
         fontFamily: 'Montaga',
-        fontSize: 46,
+        fontSize: isMobile ? 36 : 46,
         color: '#BCABAB',
+    },
+    username: {
+        fontFamily: 'Montaga',
+        fontSize: isMobile ? 42 : 56,
+        color: '#ffffff',
     },
     desktopNav: {
         flexDirection: 'row',
@@ -243,13 +232,13 @@ const styles = StyleSheet.create({
     searchSection: {
         flexDirection: 'row',
         backgroundColor: '#373030',
-        borderRadius: 25,
-        padding: 10,
-        marginBottom: 15,
+        borderRadius: 30,
+        marginVertical: 20,
         alignItems: 'center',
+        paddingHorizontal: 12,
     },
     searchIcon: {
-        marginHorizontal: 10,
+        padding: 12,
     },
     input: {
         flex: 1,
@@ -276,15 +265,6 @@ const styles = StyleSheet.create({
         width: 115,
         height: 115,
         borderRadius: 25,
-    },
-    bottomNav: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        backgroundColor: '#373030',
-        padding: 15,
-        borderRadius: 25,
-        marginTop: 'auto',
-        marginBottom: 20,
     },
     modalContainer: {
         flex: 1,

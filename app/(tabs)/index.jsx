@@ -160,7 +160,7 @@ const Index = () => {
                     <View style={styles.headerRow}>
                         <Text style={styles.title}>PantryPal</Text>
                         <View style={styles.navigation}>
-                            <Text style={styles.navText}>pantry</Text>
+                            <Text style={styles.navText}>my pantry</Text>
                             <Link href="/recipe" style={styles.navText}>
                                 <Text style={styles.navText}>recipes</Text>
                             </Link>
