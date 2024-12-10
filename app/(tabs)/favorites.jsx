@@ -128,7 +128,7 @@ const Favorites = () => {
 
                     {/* Username */}
                     <View style={styles.titleRow}>
-                        <Text style={styles.username}>Favorites</Text>
+                        <Text style={styles.username}>username</Text>
                     </View>
 
                     {/* Search bar */}
