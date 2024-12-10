@@ -74,7 +74,7 @@ const Recipe = () => {
                             <Link href="/recipe" style={styles.navText}>
                                 <Text>recipes</Text>
                             </Link>
-                            <Text style={styles.navText}>restock</Text>
+                            <Text href="/restock" style={styles.navText}>restock</Text>
                             <Link href="/favorites" style={styles.navText}>
                                 <Text>favorites</Text>
                             </Link>
@@ -215,8 +215,9 @@ const styles = StyleSheet.create({
     },
     navText: {
         fontFamily: 'Montaga',
-        fontSize: 26,
+        fontSize: isMobile ? 22 : 26,
         color: '#BCABAB',
+        margin: 20,
     },
     recipesHeader: {
         flexDirection: 'row',
