@@ -68,7 +68,7 @@ const Recipe = () => {
                     {!isMobile && (
                         <View style={styles.desktopNav}>
                             <Link href="/" style={styles.navLink}>
-                                <Text style={styles.navText}>my pantry</Text>
+                                <Text style={styles.navText}>pantry</Text>
                             </Link>
                             <Link href="/recipe" style={styles.navLink}>
                                 <Text style={styles.navText}>recipes</Text>
@@ -85,7 +85,7 @@ const Recipe = () => {
 
                 {/* Recipes Header */}
                 <View style={styles.recipesHeader}>
-                    <Text style={styles.recipesTitle}>Recipes</Text>
+                    <Text style={styles.recipesTitle}>username</Text>
                     <TouchableOpacity>
                         <Ionicons name="add" size={32} color="#BCABAB"/>
                     </TouchableOpacity>

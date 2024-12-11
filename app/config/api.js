@@ -1,5 +1,5 @@
 // app/config/api.js
-export const API_URL = 'http://localhost:8080/item';  // Changed to match your item table
+export const API_URL = 'http://localhost:8080/item';  
 
 export const endpoints = {
     getAllPantries: `${API_URL}`,
