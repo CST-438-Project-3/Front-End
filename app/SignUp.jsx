@@ -1,56 +1,49 @@
 import React, { useState } from 'react';
-import { 
-    View, 
-    Text, 
-    TextInput, 
-    TouchableOpacity, 
-    StyleSheet, 
-    Modal,
-    Dimensions 
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    StyleSheet
 } from "react-native";
 import { useRouter } from "expo-router";
-import * as Google from 'expo-auth-session/providers/google';
+import { useGoogleAuth } from '@/hooks/oauth';
 import { useFonts } from 'expo-font';
 
 const SignUp = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [showModal, setShowModal] = useState(false);
     const router = useRouter();
+    const { handleGoogleSignIn } = useGoogleAuth();
 
     const [fontsLoaded] = useFonts({
         'Montaga': require('../assets/fonts/Montaga-Regular.ttf'),
     });
 
-    const [request, response, promptAsync] = Google.useAuthRequest({
-        clientId: '698834273975-7pg91b1vub04e2rtbtn6sleghqq6lkrf.apps.googleusercontent.com',
-        iosClientId: '698834273975-sf9t82034o2l5sgci68je6nikd3el92b.apps.googleusercontent.com'
-    });
-
-    const handleGoogleSignIn = async () => {
+    const handleManualSignUp = async () => {
         try {
-            const result = await promptAsync();
-            if (result?.type === 'success') {
-                router.push('/pantry');
+            const response = await fetch('https://pantrypal15-1175d47ce25d.herokuapp.com/api/auth/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: email,
+                    password: password,
+                }),
+            });
+
+            if (response.ok) {
+                alert('Account created successfully!');
+                router.push('/logIn');
+            } else {
+                const error = await response.text();
+                alert(error);
             }
         } catch (error) {
-            console.error('Google Sign In Error:', error);
+            console.error('Sign-Up Error:', error);
+            alert('An unexpected error occurred during sign-up.');
         }
-    };
-
-    const handleSubmit = () => {
-        setShowModal(true);
-        setEmail('');
-        setPassword('');
-
-        setTimeout(() => {
-            setShowModal(false);
-            router.push('/logIn');
-        }, 2000);
-    };
-
-    const handleLogin = () => {
-        router.push('/logIn');
     };
 
     if (!fontsLoaded) {
@@ -59,26 +52,13 @@ const SignUp = () => {
 
     return (
         <View style={styles.mainContainer}>
-            <Modal
-                animationType="fade"
-                transparent={true}
-                visible={showModal}
-                onRequestClose={() => setShowModal(false)}
-            >
-                <View style={styles.modalContainer}>
-                    <View style={styles.modalContent}>
-                        <Text style={styles.modalText}>Account Created Successfully!</Text>
-                    </View>
-                </View>
-            </Modal>
-
             <Text style={styles.mainTitle}>Sign Up</Text>
 
             <View style={styles.inputGroup}>
-                <Text style={styles.label}>email</Text>
+                <Text style={styles.label}>Email</Text>
                 <TextInput
                     style={styles.input}
-                    placeholder="your email"
+                    placeholder="Enter your email"
                     placeholderTextColor="#846E6E"
                     value={email}
                     onChangeText={setEmail}
@@ -88,10 +68,10 @@ const SignUp = () => {
             </View>
 
             <View style={styles.inputGroup}>
-                <Text style={styles.label}>password</Text>
+                <Text style={styles.label}>Password</Text>
                 <TextInput
                     style={styles.input}
-                    placeholder="your password"
+                    placeholder="Enter your password"
                     placeholderTextColor="#846E6E"
                     value={password}
                     onChangeText={setPassword}
@@ -100,23 +80,16 @@ const SignUp = () => {
                 <View style={styles.inputLine} />
             </View>
 
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={styles.signUpButton}
-                onPress={handleSubmit}
+                onPress={handleManualSignUp}
             >
                 <Text style={styles.signUpButtonText}>Sign Up</Text>
             </TouchableOpacity>
 
-            <View style={styles.loginContainer}>
-                <Text style={styles.loginText}>Already have an account? </Text>
-                <TouchableOpacity onPress={handleLogin}>
-                    <Text style={styles.loginLink}>Log in</Text>
-                </TouchableOpacity>
-            </View>
+            <Text style={styles.orText}>or sign up with Google</Text>
 
-            <Text style={styles.orText}>or sign up with google</Text>
-
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={styles.googleButton}
                 onPress={handleGoogleSignIn}
             >
@@ -140,7 +113,6 @@ const styles = StyleSheet.create({
         color: 'white',
         textAlign: 'center',
         marginBottom: 40,
-        marginTop: 40,
     },
     inputGroup: {
         width: '100%',
@@ -160,7 +132,6 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         padding: 8,
-        paddingLeft: 0,
     },
     inputLine: {
         width: '100%',
@@ -174,38 +145,20 @@ const styles = StyleSheet.create({
         padding: 15,
         backgroundColor: '#231911',
         borderRadius: 50,
-        marginVertical: 30,
+        marginVertical: 20,
     },
     signUpButtonText: {
         fontFamily: 'Montaga',
         color: 'white',
         textAlign: 'center',
         fontSize: 16,
-        fontWeight: '500',
-    },
-    loginContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 20,
-    },
-    loginText: {
-        fontFamily: 'Montaga',
-        color: 'white',
-        fontSize: 14,
-    },
-    loginLink: {
-        fontFamily: 'Montaga',
-        color: '#B19696',
-        fontSize: 14,
-        marginLeft: 5,
     },
     orText: {
         fontFamily: 'Montaga',
-        color: '#231911',
+        color: '#846E6E',
         textAlign: 'center',
         fontSize: 14,
-        marginBottom: 20,
+        marginVertical: 10,
     },
     googleButton: {
         backgroundColor: 'white',
@@ -213,40 +166,12 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         width: '100%',
         maxWidth: 400,
-        marginBottom: 40,
     },
     googleButtonText: {
         fontFamily: 'Montaga',
         color: '#846E6E',
         textAlign: 'center',
         fontSize: 16,
-        fontWeight: '500',
-    },
-    modalContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    modalContent: {
-        backgroundColor: '#231911',
-        padding: 20,
-        alignItems: 'center',
-        elevation: 5,
-        shadowColor: '#000',
-        shadowOffset: {
-            width: 0,
-            height: 2,
-        },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
-    },
-    modalText: {
-        fontFamily: 'Montaga',
-        color: 'white',
-        fontSize: 18,
-        fontWeight: '500',
-        textAlign: 'center',
     },
 });
 
