@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
   Text,
@@ -14,6 +14,7 @@ import {
 import { useFonts } from "expo-font";
 import { Link, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { TouchableWithoutFeedback } from "react-native";
 
 import { usePantry } from "../hooks/usePantry";
 
@@ -40,6 +41,7 @@ const Index = () => {
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [isItemModalVisible, setIsItemModalVisible] = useState(false);
+  const [isAddingItem, setIsAddingItem] = useState(false);
 
   const [newItemData, setNewItemData] = useState({
     item_name: "",
@@ -60,21 +62,21 @@ const Index = () => {
 
   useEffect(() => {
     const checkAuthAndLoadItems = async () => {
-        try {
-            const userId = await AsyncStorage.getItem("userId");
-            if (!userId) {
-                router.push("/logIn");
-                return;
-            }
-            loadItems();
-        } catch (error) {
-            console.error("Error checking auth:", error);
-            router.push("/logIn");
+      try {
+        const userId = await AsyncStorage.getItem("userId");
+        if (!userId) {
+          router.push("/logIn");
+          return;
         }
+        loadItems();
+      } catch (error) {
+        console.error("Error checking auth:", error);
+        router.push("/logIn");
+      }
     };
 
     checkAuthAndLoadItems();
-}, []);
+  }, []);
   // New effect to handle both search and category filtering
   useEffect(() => {
     let result = pantryItems;
@@ -117,13 +119,13 @@ const Index = () => {
 
   const handleLogout = async () => {
     try {
-        await AsyncStorage.removeItem("userId");
-        setIsUserModalVisible(false);
-        router.push("/logIn");
+      await AsyncStorage.removeItem("userId");
+      setIsUserModalVisible(false);
+      router.push("/logIn");
     } catch (error) {
-        console.error("Error during logout:", error);
+      console.error("Error during logout:", error);
     }
-};
+  };
 
   const handleFavoriteToggle = async (itemId) => {
     try {
@@ -162,20 +164,52 @@ const Index = () => {
     }
   };
 
-  const handleAddItem = async () => {
+  const handleAddItem = async (e) => {
+    if (e) e.preventDefault();
+    if (isAddingItem) return;
+
+    // Validate fields first
+    if (
+      !newItemData.item_name ||
+      !newItemData.item_category ||
+      !newItemData.item_url
+    ) {
+      setError("Please fill in all required fields");
+      return;
+    }
+
+    setIsAddingItem(true);
     try {
-      const newItem = await addItem(newItemData);
-      setPantryItems((prev) => [...prev, newItem]);
-      setIsAddModalVisible(false);
-      setNewItemData({
-        item_name: "",
-        item_category: "",
-        item_url: "",
-        item_quantity: "",
-        is_favorite: false,
+      const userId = await AsyncStorage.getItem("userId");
+      if (!userId) {
+        router.push("/logIn");
+        return;
+      }
+
+      const newItem = await addItem({
+        itemName: newItemData.item_name,
+        itemCategory: newItemData.item_category,
+        itemUrl: newItemData.item_url,
       });
+
+      if (newItem) {
+        setPantryItems((prev) => [...prev, newItem]);
+        setFilteredItems((prev) => [...prev, newItem]);
+        setNewItemData({
+          item_name: "",
+          item_category: "",
+          item_url: "",
+          is_favorite: false,
+        });
+        setError(null);
+        setIsAddModalVisible(false);
+        await loadItems(); // Refresh the items list
+      }
     } catch (error) {
-      console.error("Failed to add item:", error);
+      console.error("Error adding item:", error);
+      setError("Failed to add item. Please try again.");
+    } finally {
+      setIsAddingItem(false);
     }
   };
 
@@ -402,53 +436,49 @@ const Index = () => {
         </Modal>
 
         {/* Add Item Modal */}
+        {/* Add Item Modal */}
         <Modal
           animationType="fade"
           transparent={true}
           visible={isAddModalVisible}
           onRequestClose={() => setIsAddModalVisible(false)}
         >
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={() => setIsAddModalVisible(false)}
-          >
-            <View
-              style={styles.addModalContent}
-              onStartShouldSetResponder={(e) => e.stopPropagation()}
-            >
-              <TextInput
-                style={styles.modalInput}
-                placeholder="Item Name"
-                value={newItemData.item_name}
-                onChangeText={(text) =>
-                  setNewItemData({ ...newItemData, item_name: text })
-                }
-              />
-              <TextInput
-                style={styles.modalInput}
-                placeholder="Category"
-                value={newItemData.item_category}
-                onChangeText={(text) =>
-                  setNewItemData({ ...newItemData, item_category: text })
-                }
-              />
-              <TextInput
-                style={styles.modalInput}
-                placeholder="Image URL"
-                value={newItemData.item_url}
-                onChangeText={(text) =>
-                  setNewItemData({ ...newItemData, item_url: text })
-                }
-              />
-              <TouchableOpacity
-                style={styles.addItemButton}
-                onPress={handleAddItem}
-              >
-                <Text style={styles.addItemButtonText}>Add Item</Text>
-              </TouchableOpacity>
+          <TouchableWithoutFeedback>
+            <View style={styles.modalOverlay}>
+              <View style={styles.addModalContent}>
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Item Name"
+                  value={newItemData.item_name}
+                  onChangeText={(text) =>
+                    setNewItemData({ ...newItemData, item_name: text })
+                  }
+                />
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Category"
+                  value={newItemData.item_category}
+                  onChangeText={(text) =>
+                    setNewItemData({ ...newItemData, item_category: text })
+                  }
+                />
+                <TextInput
+                  style={styles.modalInput}
+                  placeholder="Image URL"
+                  value={newItemData.item_url}
+                  onChangeText={(text) =>
+                    setNewItemData({ ...newItemData, item_url: text })
+                  }
+                />
+                <TouchableOpacity
+                  style={styles.addItemButton}
+                  onPress={handleAddItem}
+                >
+                  <Text style={styles.addItemButtonText}>Add Item</Text>
+                </TouchableOpacity>
+              </View>
             </View>
-          </TouchableOpacity>
+          </TouchableWithoutFeedback>
         </Modal>
 
         {/* User Modal */}
@@ -650,10 +680,23 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 15,
   },
+  addModalContent: {
+    position: "absolute",
+    top: "30%",
+    left: "50%",
+    transform: [{ translateX: -150 }],
+    backgroundColor: "#373030",
+    borderRadius: 15,
+    padding: 20,
+    width: 300,
+    elevation: 5,
+    zIndex: 1000,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
-    justifyContent: "flex-start",
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     color: "#BCABAB",

@@ -86,22 +86,42 @@ export const usePantry = () => {
     try {
       const userId = await getUserId();
       if (!userId) throw new Error("No user ID found");
-
+  
       const response = await fetch(`${API_URL}/items`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
-          itemName: itemData.item_name,
-          itemCategory: itemData.item_category,
-          itemUrl: itemData.item_url,
-          is_favorite: false,
-          item_quantity: itemData.item_quantity || 0,
+          itemName: itemData.itemName,
+          itemCategory: itemData.itemCategory,
+          itemUrl: itemData.itemUrl
         }),
       });
-
-      if (!response.ok)
+  
+      if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
+      }
+  
       const newItem = await response.json();
+      
+      // Create user-item association
+      const userItemResponse = await fetch(`${API_URL}/userItems`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          userId: userId,
+          itemId: newItem.id,
+          is_favorite: false
+        }),
+      });
+  
+      if (!userItemResponse.ok) {
+        throw new Error("Failed to create user-item association");
+      }
+  
       return newItem;
     } catch (error) {
       console.error("Error adding item:", error);
