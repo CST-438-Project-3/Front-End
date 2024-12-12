@@ -44,30 +44,10 @@ const Favorites = () => {
   useEffect(() => {
     const checkAuthAndLoadItems = async () => {
       try {
-
-        const userId = await AsyncStorage.getItem("userId");
-        setUserId(userId);
-        return userId;
-      } catch (error) {
-        console.error("Error fetching user ID:", error);
-      }
-    };
-    const fetchFavoriteItems = async (userId) => {
-        try {
-            const response = await fetch(
-                `https://pantrypal15-1175d47ce25d.herokuapp.com/userItems/user/${userId}`
-            );
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            const favorites = data.filter((item) => item.isFavorite);
-            console.log("Favorites:", favorites);
-            return favorites;
-        } catch (error) {
-            console.error("Detailed error:", error);
-            return [];
-
+        const storedUserId = await AsyncStorage.getItem("userId");
+        if (!storedUserId) {
+          router.push("/logIn");
+          return;
         }
 
         // Get all items with favorite status
@@ -87,17 +67,8 @@ const Favorites = () => {
       }
     };
 
-
-    // Execute functions
-    const loadFavorites = async () => {
-        const userId = await fetchUserId();
-        console.log("User ID:", userId);
-        const favorites = await fetchFavoriteItems(userId);
-        await fetchFavoriteDetails(favorites);
-    };
-
-    loadFavorites();
-}, []); 
+    checkAuthAndLoadItems();
+  }, []);
 
   // Category filter function
   const handleCategoryFilter = (category) => {

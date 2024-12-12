@@ -103,9 +103,7 @@ const Restock = () => {
       const userId = await fetchUserId();
       const lowItems = await fetchLowItems(userId);
       await fetchLowItemDetails(lowItems);
-
     };
-
 
     loadItems();
   }, []);
@@ -131,7 +129,7 @@ const Restock = () => {
 
       // Increment the quantity
       const updatedQuantity = currentItem.quantity + 1;
-  
+
       // Send the updated quantity to the server
       const updateResponse = await fetch(
         `https://pantrypal15-1175d47ce25d.herokuapp.com/userItems/${itemId}`,
@@ -149,20 +147,21 @@ const Restock = () => {
 
       console.log("Updated item:", updatedQuantity);
 
-  
       const updatedItem = await updateResponse.json();
-  
+
       // Update the state with the new quantity
       setLowItems((prevItems) =>
         prevItems.map((item) =>
-          item.id === itemId ? { ...item, quantity: updatedItem.quantity } : item
-
+          item.id === itemId
+            ? { ...item, quantity: updatedItem.quantity }
+            : item
         )
       );
       setFilteredItems((prevItems) =>
         prevItems.map((item) =>
-          item.id === itemId ? { ...item, quantity: updatedItem.quantity } : item
-
+          item.id === itemId
+            ? { ...item, quantity: updatedItem.quantity }
+            : item
         )
       );
     } catch (error) {
@@ -199,21 +198,22 @@ const Restock = () => {
       if (!updateResponse.ok) {
         throw new Error(`HTTP error! status: ${updateResponse.status}`);
       }
-  
+
       const updatedItem = await updateResponse.json();
-  
+
       // Update the state with the new quantity
       setLowItems((prevItems) =>
         prevItems.map((item) =>
-          item.id === itemId ? { ...item, quantity: updatedItem.quantity } : item
-
+          item.id === itemId
+            ? { ...item, quantity: updatedItem.quantity }
+            : item
         )
       );
       setFilteredItems((prevItems) =>
         prevItems.map((item) =>
-
-          item.id === itemId ? { ...item, quantity: updatedItem.quantity } : item
-
+          item.id === itemId
+            ? { ...item, quantity: updatedItem.quantity }
+            : item
         )
       );
     } catch (error) {
@@ -230,31 +230,18 @@ const Restock = () => {
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <TouchableOpacity style={styles.backButton} onPress={onClose}>
-            <Ionicons name="arrow-back" size={24} color="#BCABAB" />
-          </TouchableOpacity>
-          <Image source={{ uri: item?.src }} style={styles.modalImage} />
-          <View style={styles.modalInfo}>
-            <Text style={styles.modalTitle}>{item?.title}</Text>
-            <Text style={styles.modalDetails}>Category: {item?.category}</Text>
-            
-            <View style={styles.quantityControls}>
-              <TouchableOpacity
-                  style={styles.quantityButton}
-                  onPress={() => handleSubtractQuantity(item.id)}
-              >
-                  <Ionicons name="remove" size={24} color="#BCABAB" />
-              </TouchableOpacity>
-              <Text style={styles.modalDetails}>Quantity: {item?.quantity}</Text>
-              <TouchableOpacity
-                  style={styles.quantityButton}
-                  onPress={() => handleAddQuantity(item.id)}
-              >
-                  <Ionicons name="add" size={24} color="#BCABAB" />
-              </TouchableOpacity>
-            </View>
+      <TouchableOpacity
+        style={styles.modalOverlay}
+        activeOpacity={1}
+        onPress={onClose} // This will close the modal when clicking the overlay
+      >
+        <TouchableOpacity
+          style={styles.modalContent}
+          activeOpacity={1}
+          onPress={(e) => e.stopPropagation()} // This prevents closing when clicking the content
+        >
+          <View style={styles.modalImageContainer}>
+            <Image source={{ uri: item?.src }} style={styles.modalImage} />
           </View>
 
           <Text style={styles.modalTitle}>{item?.title}</Text>
@@ -571,13 +558,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 8,
     zIndex: 1,
-  },
-  quantityControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  quantityButton: {
-      marginHorizontal: 10,
   },
 });
 
