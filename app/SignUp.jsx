@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Fragment, useEffect } from 'react';
 import { 
     View, 
     Text, 
@@ -6,10 +6,9 @@ import {
     TouchableOpacity, 
     StyleSheet, 
     Modal,
-    Dimensions 
+    Platform 
 } from "react-native";
 import { useRouter } from "expo-router";
-import * as Google from 'expo-auth-session/providers/google';
 import { useFonts } from 'expo-font';
 
 const SignUp = () => {
@@ -22,20 +21,10 @@ const SignUp = () => {
         'Montaga': require('../assets/fonts/Montaga-Regular.ttf'),
     });
 
-    const [request, response, promptAsync] = Google.useAuthRequest({
-        clientId: '698834273975-7pg91b1vub04e2rtbtn6sleghqq6lkrf.apps.googleusercontent.com',
-        iosClientId: '698834273975-sf9t82034o2l5sgci68je6nikd3el92b.apps.googleusercontent.com'
-    });
+    const isWeb = Platform.OS === 'web';
+
 
     const handleGoogleSignIn = async () => {
-        try {
-            const result = await promptAsync();
-            if (result?.type === 'success') {
-                router.push('/pantry');
-            }
-        } catch (error) {
-            console.error('Google Sign In Error:', error);
-        }
     };
 
     const handleSubmit = () => {
@@ -116,12 +105,21 @@ const SignUp = () => {
 
             <Text style={styles.orText}>or sign up with google</Text>
 
-            <TouchableOpacity 
-                style={styles.googleButton}
-                onPress={handleGoogleSignIn}
-            >
-                <Text style={styles.googleButtonText}>Google</Text>
-            </TouchableOpacity>
+            {isWeb ? (
+                <form
+                    action="https://pantrypal15-1175d47ce25d.herokuapp.com/oauth2/authorization/google"
+                    method="get"
+                >
+                    <input type="submit" value="Sign in with Google" />
+                </form>
+            ) : (
+                <TouchableOpacity 
+                    style={styles.googleButton}
+                    onPress={handleGoogleSignIn}
+                >
+                    <Text style={styles.googleButtonText}>Google</Text>
+                </TouchableOpacity>
+            )}
         </View>
     );
 };
