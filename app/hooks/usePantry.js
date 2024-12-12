@@ -1,21 +1,33 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 export const usePantry = () => {
   const API_URL = "https://pantrypal15-1175d47ce25d.herokuapp.com";
 
+  const getUserId = async () => {
+    try {
+      const userId = await AsyncStorage.getItem("userId");
+      return userId;
+    } catch (error) {
+      console.error("Error getting userId:", error);
+      return null;
+    }
+  };
+
   const fetchItems = async () => {
     try {
-      console.log("Fetching items and user favorites...");
+      const userId = await getUserId();
+      if (!userId) {
+        throw new Error("No user ID found");
+      }
 
-      // get all items
       const itemsResponse = await fetch(`${API_URL}/items`);
       const items = await itemsResponse.json();
 
-      // user can check fav
       const userItemsResponse = await fetch(
         `${API_URL}/userItems/user/${userId}`
       );
       const userItems = await userItemsResponse.json();
 
-      // fav -> items
       const itemsWithFavorites = items.map((item) => {
         const userItem = userItems.find((ui) => ui.itemId === item.id);
         return {
@@ -25,7 +37,6 @@ export const usePantry = () => {
         };
       });
 
-      console.log("Items with favorites:", itemsWithFavorites);
       return itemsWithFavorites;
     } catch (error) {
       console.error("Error fetching items:", error);
@@ -35,7 +46,9 @@ export const usePantry = () => {
 
   const toggleFavorite = async (itemId, newStatus) => {
     try {
-      // userItem if exists
+      const userId = await getUserId();
+      if (!userId) throw new Error("No user ID found");
+
       const userItemsResponse = await fetch(
         `${API_URL}/userItems/user/${userId}`
       );
@@ -43,25 +56,16 @@ export const usePantry = () => {
       const existingUserItem = userItems.find((ui) => ui.itemId === itemId);
 
       let response;
-
       if (existingUserItem) {
-        // Update userItem
         response = await fetch(`${API_URL}/userItems/${existingUserItem.id}`, {
           method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            is_favorite: newStatus,
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ is_favorite: newStatus }),
         });
       } else {
-        // Create new userItem
         response = await fetch(`${API_URL}/userItems`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             userId: userId,
             itemId: itemId,
@@ -70,10 +74,7 @@ export const usePantry = () => {
         });
       }
 
-      if (!response.ok) {
-        throw new Error("Failed to toggle favorite");
-      }
-
+      if (!response.ok) throw new Error("Failed to toggle favorite");
       return await response.json();
     } catch (error) {
       console.error("Error in toggleFavorite:", error);
@@ -83,26 +84,24 @@ export const usePantry = () => {
 
   const addItem = async (itemData) => {
     try {
+      const userId = await getUserId();
+      if (!userId) throw new Error("No user ID found");
+
       const response = await fetch(`${API_URL}/items`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           itemName: itemData.item_name,
           itemCategory: itemData.item_category,
           itemUrl: itemData.item_url,
-          is_favorite: itemData.isFavorite,
-          item_quantity: itemData.itemQuantity,
+          is_favorite: false,
+          item_quantity: itemData.item_quantity || 0,
         }),
       });
 
-      if (!response.ok) {
+      if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
       const newItem = await response.json();
-      console.log("New item added:", newItem);
       return newItem;
     } catch (error) {
       console.error("Error adding item:", error);
@@ -110,5 +109,5 @@ export const usePantry = () => {
     }
   };
 
-  return { fetchItems, addItem, toggleFavorite };
+  return { fetchItems, addItem, toggleFavorite, getUserId };
 };
