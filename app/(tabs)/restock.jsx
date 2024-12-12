@@ -17,7 +17,7 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 const { width } = Dimensions.get("window");
 const isMobile = width < 600;
 
-const userId = "1"; // change to user id
+const userId = localStorage.getItem("userId");
 
 const Restock = () => {
   const [fontsLoaded] = useFonts({

@@ -102,6 +102,7 @@ const Index = () => {
   };
 
   const handleLogout = () => {
+    localStorage.removeItem("userId");
     setIsUserModalVisible(false);
     router.push("/logIn");
   };
