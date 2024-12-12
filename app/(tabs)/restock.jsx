@@ -123,6 +123,101 @@ const Restock = () => {
     }
   };
 
+  const handleAddQuantity = async (itemId) => {
+    try {
+      const currentItem = lowItems.find((item) => item.id === itemId);
+      if (!currentItem) {
+        throw new Error("Item not found in state.");
+      }
+  
+      // Increment the quantity
+      const updatedQuantity = currentItem.quantity + 1;
+  
+      // Send the updated quantity to the server
+      const updateResponse = await fetch(
+        `https://pantrypal15-1175d47ce25d.herokuapp.com/userItems/${itemId}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ quantity: updatedQuantity }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!updateResponse.ok) {
+        throw new Error(`HTTP error! status: ${updateResponse.status}`);
+      }
+
+      console.log("Updated item:", updatedQuantity);
+  
+      const updatedItem = await updateResponse.json();
+  
+      // Update the state with the new quantity
+      setLowItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === itemId ? { ...item, quantity: updatedItem.quantity } : item
+        )
+      );
+      setFilteredItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === itemId ? { ...item, quantity: updatedItem.quantity } : item
+        )
+      );
+    } catch (error) {
+      console.error("Error adding quantity:", error);
+      // Optionally, show user feedback
+      alert("Failed to update item quantity. Please try again.");
+    }
+  };
+
+  const handleSubtractQuantity = async (itemId) => {
+    try {
+      const currentItem = lowItems.find((item) => item.id === itemId);
+      if (!currentItem) {
+        throw new Error("Item not found in state.");
+      }
+  
+      // Increment the quantity
+      if (currentItem.quantity === 0) {
+        return;
+      }
+      const updatedQuantity = currentItem.quantity - 1;
+  
+      // Send the updated quantity to the server
+      const updateResponse = await fetch(
+        `https://pantrypal15-1175d47ce25d.herokuapp.com/userItems/${itemId}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ quantity: updatedQuantity }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!updateResponse.ok) {
+        throw new Error(`HTTP error! status: ${updateResponse.status}`);
+      }
+  
+      const updatedItem = await updateResponse.json();
+  
+      // Update the state with the new quantity
+      setLowItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === itemId ? { ...item, quantity: updatedItem.quantity } : item
+        )
+      );
+      setFilteredItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === itemId ? { ...item, quantity: updatedItem.quantity } : item
+        )
+      );
+    } catch (error) {
+      console.error("Error adding quantity:", error);
+      // Optionally, show user feedback
+      alert("Failed to update item quantity. Please try again.");
+    }
+  };
+
   const ItemModal = ({ item, visible, onClose }) => (
     <Modal
       animationType="fade"
@@ -139,6 +234,22 @@ const Restock = () => {
           <View style={styles.modalInfo}>
             <Text style={styles.modalTitle}>{item?.title}</Text>
             <Text style={styles.modalDetails}>Category: {item?.category}</Text>
+            
+            <View style={styles.quantityControls}>
+              <TouchableOpacity
+                  style={styles.quantityButton}
+                  onPress={() => handleSubtractQuantity(item.id)}
+              >
+                  <Ionicons name="remove" size={24} color="#BCABAB" />
+              </TouchableOpacity>
+              <Text style={styles.modalDetails}>Quantity: {item?.quantity}</Text>
+              <TouchableOpacity
+                  style={styles.quantityButton}
+                  onPress={() => handleAddQuantity(item.id)}
+              >
+                  <Ionicons name="add" size={24} color="#BCABAB" />
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </View>
@@ -426,6 +537,13 @@ const styles = StyleSheet.create({
     fontFamily: "Montaga",
     fontSize: 18,
     color: "#ffffff",
+  },
+  quantityControls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  quantityButton: {
+      marginHorizontal: 10,
   },
 });
 
