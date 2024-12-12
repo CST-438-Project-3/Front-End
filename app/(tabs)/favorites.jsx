@@ -44,10 +44,10 @@ const Favorites = () => {
       try {
         const userId = await AsyncStorage.getItem("userId");
         setUserId(userId);
+        return userId;
       } catch (error) {
         console.error("Error fetching user ID:", error);
       }
-      return userId;
     };
     const fetchFavoriteItems = async (userId) => {
         try {
@@ -104,6 +104,7 @@ const Favorites = () => {
     // Execute functions
     const loadFavorites = async () => {
         const userId = await fetchUserId();
+        console.log("User ID:", userId);
         const favorites = await fetchFavoriteItems(userId);
         await fetchFavoriteDetails(favorites);
     };

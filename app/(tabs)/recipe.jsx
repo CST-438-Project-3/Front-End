@@ -11,7 +11,7 @@ const { width } = Dimensions.get("window");
 const isMobile = width < 600;
 
 
-
+const userId = '1';
 
 const Recipe = () => {
     const [items, setItems] = useState([]);
@@ -19,6 +19,7 @@ const Recipe = () => {
     const [selectedRecipe, setSelectedRecipe] = useState(null);
     const [modalVisible, setModalVisible] = useState(false);
     const [loading, setLoading] = useState(true);
+    const [userId, setUserId] = useState(null);
 
   const [fontsLoaded] = useFonts({
     Montaga: require("../../assets/fonts/Montaga-Regular.ttf"),
@@ -29,7 +30,16 @@ const Recipe = () => {
   }
 
     useEffect(() => {
-        const fetchItems = async () => {
+        const fetchUserId = async () => {
+            try {
+              const userId = await AsyncStorage.getItem("userId");
+              setUserId(userId);
+              return userId;
+            } catch (error) {
+              console.error("Error fetching user ID:", error);
+            }
+          };
+        const fetchItems = async (userId) => {
             console.log('Fetching items...');
             try {
                 const response = await fetch(`https://pantrypal15-1175d47ce25d.herokuapp.com/userItems/user/${userId}`);
@@ -92,7 +102,8 @@ const Recipe = () => {
         
         const loadData = async () => {
             setLoading(true);
-            const items = await fetchItems();
+            const userId = await fetchUserId();
+            const items = await fetchItems(userId);
             const updatedItems = await fetchItemDetails(items);
             await fetchRecipes(updatedItems);
             setLoading(false);
