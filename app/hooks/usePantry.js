@@ -1,13 +1,11 @@
 const API_URL = 'https://pantrypal15-1175d47ce25d.herokuapp.com';
 
 export const usePantry = () => {
-    // Fetching items with proper defaults for null values
     const fetchItems = async () => {
         try {
             console.log('Fetching items...');
             const response = await fetch(`${API_URL}/items`);
             
-            // Log the full response object
             console.log('Response status:', response.status);
             console.log('Response headers:', response.headers);
    
@@ -29,7 +27,7 @@ export const usePantry = () => {
     };
    
 
-    // Adding a new item with proper default values
+    // Adding item
     const addItem = async (itemData) => {
         try {
             const response = await fetch(`${API_URL}/items`, {
@@ -41,7 +39,7 @@ export const usePantry = () => {
                     itemName: itemData.item_name,
                     itemCategory: itemData.item_category,
                     itemUrl: itemData.item_url,
-                    is_favorite: itemData.isFavorite,
+                    is_favorite: itemData.isFavorite,   
                     item_quantity: itemData.itemQuantity 
                 })
             });
@@ -62,11 +60,11 @@ export const usePantry = () => {
     // Toggling favorite status
     const toggleFavorite = async (itemId) => {
         try {
-            // Get the current item first
+            // get current item
             const itemResponse = await fetch(`${API_URL}/items/${itemId}`);
             const currentItem = await itemResponse.json();
             
-            // Then toggle its favorite status
+            // toggling favorite status
             const response = await fetch(`${API_URL}/items/${itemId}`, {
                 method: 'PATCH',
                 headers: {

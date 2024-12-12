@@ -306,45 +306,49 @@ const Index = () => {
            </Modal>
 
            {/* Add Item Modal */}
-           <Modal
-               animationType="fade"
-               transparent={true}
-               visible={isAddModalVisible}
-               onRequestClose={() => setIsAddModalVisible(false)}
+           {/* Add Item Modal */}
+<Modal
+   animationType="fade"
+   transparent={true}
+   visible={isAddModalVisible}
+   onRequestClose={() => setIsAddModalVisible(false)}
+>
+   {/* Clickable Overlay Background */}
+   <TouchableOpacity 
+       style={styles.modalOverlay}
+       activeOpacity={1}
+       onPress={() => setIsAddModalVisible(false)}  // Close modal when clicking outside
+   >
+       {/* Modal Content */}
+       <View style={styles.addModalContent} onStartShouldSetResponder={(e) => e.stopPropagation()}>
+           <TextInput
+               style={styles.modalInput}
+               placeholder="Item Name"
+               value={newItemData.item_name}
+               onChangeText={(text) => setNewItemData({...newItemData, item_name: text})}
+           />
+           <TextInput
+               style={styles.modalInput}
+               placeholder="Category"
+               value={newItemData.item_category}
+               onChangeText={(text) => setNewItemData({...newItemData, item_category: text})}
+           />
+           <TextInput
+               style={styles.modalInput}
+               placeholder="Image URL"
+               value={newItemData.item_url}
+               onChangeText={(text) => setNewItemData({...newItemData, item_url: text})}
+           />
+           <TouchableOpacity 
+               style={styles.addItemButton}
+               onPress={handleAddItem}
            >
-               <TouchableOpacity 
-                   style={styles.modalOverlay}
-                   activeOpacity={1}
-                   onPress={() => setIsAddModalVisible(false)}
-               >
-                   <View style={styles.addModalContent}>
-                       <TextInput
-                           style={styles.modalInput}
-                           placeholder="Item Name"
-                           value={newItemData.item_name}
-                           onChangeText={(text) => setNewItemData({...newItemData, item_name: text})}
-                       />
-                       <TextInput
-                           style={styles.modalInput}
-                           placeholder="Category"
-                           value={newItemData.item_category}
-                           onChangeText={(text) => setNewItemData({...newItemData, item_category: text})}
-                       />
-                       <TextInput
-                           style={styles.modalInput}
-                           placeholder="Image URL"
-                           value={newItemData.item_url}
-                           onChangeText={(text) => setNewItemData({...newItemData, item_url: text})}
-                       />
-                       <TouchableOpacity 
-                           style={styles.addItemButton}
-                           onPress={handleAddItem}
-                       >
-                           <Text style={styles.addItemButtonText}>Add Item</Text>
-                       </TouchableOpacity>
-                   </View>
-               </TouchableOpacity>
-           </Modal>
+               <Text style={styles.addItemButtonText}>Add Item</Text>
+           </TouchableOpacity>
+       </View>
+   </TouchableOpacity>
+</Modal>
+
 
            {/* User Modal */}
            <Modal
