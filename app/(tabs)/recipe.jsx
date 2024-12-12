@@ -19,14 +19,16 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 const { width } = Dimensions.get("window");
 const isMobile = width < 600;
 
-const userId = "1";
+
 
 const Recipe = () => {
-  const [items, setItems] = useState([]);
-  const [recipesData, setRecipesData] = useState([]);
-  const [selectedRecipe, setSelectedRecipe] = useState(null);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [loading, setLoading] = useState(true);
+    const [items, setItems] = useState([]);
+    const [recipesData, setRecipesData] = useState([]);
+    const [selectedRecipe, setSelectedRecipe] = useState(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [userId, setUserId] = useState(null);
+
 
   const [fontsLoaded] = useFonts({
     Montaga: require("../../assets/fonts/Montaga-Regular.ttf"),
@@ -36,23 +38,88 @@ const Recipe = () => {
     return null;
   }
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      console.log("Fetching items...");
-      try {
-        const response = await fetch(
-          `https://pantrypal15-1175d47ce25d.herokuapp.com/userItems/user/${userId}`
-        );
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+    useEffect(() => {
+        const fetchUserId = async () => {
+            try {
+              const userId = await AsyncStorage.getItem("userId");
+              setUserId(userId);
+              return userId;
+            } catch (error) {
+              console.error("Error fetching user ID:", error);
+            }
+          };
+        const fetchItems = async (userId) => {
+            console.log('Fetching items...');
+            try {
+                const response = await fetch(`https://pantrypal15-1175d47ce25d.herokuapp.com/userItems/user/${userId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching items:', error);
+                return [];
+            }
+        };
+
+        const fetchItemDetails = async (items) => {
+            console.log('Fetching details:', items);
+            const updatedItems = await Promise.all(items.map(async (item) => {
+                try {
+                    const response = await fetch(`https://pantrypal15-1175d47ce25d.herokuapp.com/items/${item.itemId}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    return {
+                        ...item,
+                        src: data.itemUrl,
+                        name: data.itemName,
+                    };
+                } catch (error) {
+                    console.error('Error fetching item details:', error);
+                    return item;
+                }
+
+            }));
+            setItems(updatedItems)
+            return updatedItems;
+            };
+
+
+        const fetchRecipes = async (items) => {
+            console.log('Fetching recipes:' , items);
+            const allRecipes = [];
+            for (const item of items) {
+                try {
+                    const response = await fetch(`https://www.themealdb.com/api/json/v1/1/filter.php?i=${item.name}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    if (data.meals) {
+                        allRecipes.push(...data.meals);
+                    }
+                } catch (error) {
+                    console.error('Error fetching recipes:', error);
+                }
+            }
+            console.log('Fetched recipes:', allRecipes);
+            setRecipesData(allRecipes);
         }
-        const data = await response.json();
-        return data;
-      } catch (error) {
-        console.error("Error fetching items:", error);
-        return [];
-      }
-    };
+        
+        const loadData = async () => {
+            setLoading(true);
+            const userId = await fetchUserId();
+            const items = await fetchItems(userId);
+            const updatedItems = await fetchItemDetails(items);
+            await fetchRecipes(updatedItems);
+            setLoading(false);
+        };
+
+        loadData();
+    }, []);
 
     const fetchItemDetails = async (items) => {
       console.log("Fetching details:", items);
