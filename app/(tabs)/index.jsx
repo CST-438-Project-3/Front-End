@@ -438,38 +438,13 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#524242",
   },
-  favoriteButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 10,
-    marginTop: 15,
-    backgroundColor: "#524242",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#685858",
-  },
   favoriteButtonActive: {
     backgroundColor: "#ffffff15",
     borderColor: "#ff6b6b",
   },
-  favoriteButtonText: {
-    color: "#BCABAB",
-    fontFamily: "Montaga",
-    fontSize: 16,
-    marginLeft: 8,
-  },
+
   favoriteButtonTextActive: {
     color: "#ff6b6b",
-  },
-  favoriteIconContainer: {
-    position: "absolute",
-    top: 10,
-    right: 10,
-    backgroundColor: "rgba(255, 255, 255, 0.3)",
-    borderRadius: 20,
-    padding: 8,
-    zIndex: 1,
   },
   favoriteIconContainerActive: {
     backgroundColor: "rgba(255, 255, 255, 0.5)",
