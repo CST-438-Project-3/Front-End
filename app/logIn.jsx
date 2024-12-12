@@ -11,8 +11,10 @@ import { useRouter } from "expo-router";
 import * as Google from 'expo-auth-session/providers/google';
 import { useFonts } from 'expo-font';
 
+localStorage.setItem('userId', '');
+
 const LogIn = () => {
-    const [email, setEmail] = useState('');
+    const [username, setusername] = useState('');
     const [password, setPassword] = useState('');
     const router = useRouter();
 
@@ -48,18 +50,48 @@ const LogIn = () => {
         return null;
     }
 
+    const handleSignIn = async () => {
+        if (!username || !password) {
+            return;
+        }
+
+        try {
+            const response = await fetch("https://pantrypal15-1175d47ce25d.herokuapp.com/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    username,
+                    password,
+                }),
+            });
+            if (response.ok) {
+                const data = await response.json();
+                console.log('Login successful:', data);
+                localStorage.setItem('userId', data);
+                router.push('/(tabs)');
+            } else {
+                console.error('Login failed:', response);
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+        }
+    }
+        
+
     return (
         <View style={styles.mainContainer}>
             <Text style={styles.mainTitle}>login</Text>
             
             <View style={styles.inputGroup}>
-                <Text style={styles.label}>email</Text>
+                <Text style={styles.label}>username</Text>
                 <TextInput
                     style={styles.input}
-                    placeholder="your email"
+                    placeholder="your username"
                     placeholderTextColor="#846E6E"
-                    value={email}
-                    onChangeText={setEmail}
+                    value={username}
+                    onChangeText={setusername}
                     autoCapitalize="none"
                 />
                 <View style={styles.inputLine} />
@@ -80,7 +112,7 @@ const LogIn = () => {
             
             <TouchableOpacity 
                 style={styles.loginButton}
-                onPress={handleSubmit}
+                onPress={handleSignIn}
             >
                 <Text style={styles.loginButtonText}>login</Text>
             </TouchableOpacity>

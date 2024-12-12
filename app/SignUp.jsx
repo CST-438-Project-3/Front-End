@@ -12,14 +12,13 @@ import { useRouter } from "expo-router";
 import { useFonts } from 'expo-font';
 
 const SignUp = () => {
+    const [name, setName] = useState('');
     const [username, setUsername] = useState('');  
     const [password, setPassword] = useState('');
     const [showModal, setShowModal] = useState(false);
     const [error, setError] = useState('');
     const [errorMessage, setErrorMessage] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [email, setEmail] = useState(""); 
-    const [name, setName] = useState("");
     const router = useRouter();
 
     const [fontsLoaded] = useFonts({
@@ -34,43 +33,34 @@ const SignUp = () => {
     };
     
 
-    const handleSubmit = async (event) => {
-        event.preventDefault();
-    
-        const payload = {
-            username: username,
-            email: "",
-            password: password,
-            name: "", 
-            role: "USER",
-        };
-    
-        console.log("Payload:", payload);
-    
+    const handleSubmit = async () => {
+        if (!username || !password || !name) {
+            setErrorMessage('Please fill out all fields.');
+            return;
+        }
+     
         try {
-            const response = await fetch("https://pantrypal15-1175d47ce25d.herokuapp.com/users", {
+            const response = await fetch("https://pantrypal15-1175d47ce25d.herokuapp.com/api/auth/register", {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    name,
+                    username,
+                    password,
+                }),
             });
-    
-            // text from the response instead of JSON
-            let responseBody = "";
-            try {
-                responseBody = await response.text();  // get response as text
-            } catch (textError) {
-                console.error("Error parsing response as text:", textError);
-                responseBody = "Unexpected error, response is not text.";
-            }
-    
-            console.log("Response status:", response.status);
-            console.log("Response body:", responseBody);
-    
             if (response.ok) {
-                alert("User registered successfully!");
-            } else {
-                throw new Error(responseBody || "An unexpected error occurred.");
+                setShowModal(true);
+                setUsername('');
+                setPassword('');
+                setTimeout(() => {
+                    setShowModal(false);
+                    router.push('/logIn');
+                }, 2000);
             }
+            
         } catch (error) {
             console.error("Error occurred:", error.message);
         }
@@ -101,6 +91,18 @@ const SignUp = () => {
                             <Text style={styles.errorText}>{errorMessage}</Text>
                         </View>
                     ) : null}
+            <View style={styles.inputGroup}>
+                <Text style={styles.label}>name</Text>
+                <TextInput
+                    style={styles.input}
+                    placeholder="your name"
+                    placeholderTextColor="#846E6E"
+                    value={name}
+                    onChangeText={setName}
+                    autoCapitalize="none"
+                />
+                <View style={styles.inputLine} />
+            </View>
             <View style={styles.inputGroup}>
                 <Text style={styles.label}>username</Text>
                 <TextInput
@@ -148,12 +150,12 @@ const SignUp = () => {
             <Text style={styles.orText}>or sign up with google</Text>
 
             {isWeb ? (
-                <form
-                    action="https://pantrypal15-1175d47ce25d.herokuapp.com/oauth2/authorization/google"
-                    method="get"
+                <TouchableOpacity 
+                    style={styles.googleButton}
+                    onPress={() => window.location.href = "https://pantrypal15-1175d47ce25d.herokuapp.com/oauth2/authorization/google"}
                 >
-                    <input type="submit" value="Sign in with Google" />
-                </form>
+                    <Text style={styles.googleButtonText}>Sign in with Google</Text>
+                </TouchableOpacity>
             ) : (
                 <TouchableOpacity 
                     style={styles.googleButton}
