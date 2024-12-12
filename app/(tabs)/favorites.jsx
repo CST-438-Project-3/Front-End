@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   View,
   Text,
@@ -11,26 +12,27 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { useFonts } from "expo-font";
-import { Link } from "expo-router";
+import { Link, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 const isMobile = width < 600;
 
-
+import { usePantry } from "../hooks/usePantry";
 
 const Favorites = () => {
-  const [fontsLoaded] = useFonts({
-    Montaga: require("../../assets/fonts/Montaga-Regular.ttf"),
-  });
+  const router = useRouter();
+  const { fetchItems, toggleFavorite } = usePantry();
   const [selectedItem, setSelectedItem] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [favoriteItems, setFavoriteItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
-  const [userId, setUserId] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [fontsLoaded] = useFonts({
+    Montaga: require("../../assets/fonts/Montaga-Regular.ttf"),
+  });
 
   if (!fontsLoaded) return null;
 
@@ -40,76 +42,33 @@ const Favorites = () => {
   };
 
   useEffect(() => {
-    const fetchUserId = async () => {
+    const checkAuthAndLoadItems = async () => {
       try {
-        const userId = await AsyncStorage.getItem("userId");
-        setUserId(userId);
-      } catch (error) {
-        console.error("Error fetching user ID:", error);
-      }
-      return userId;
-    };
-    const fetchFavoriteItems = async (userId) => {
-        try {
-            const response = await fetch(
-                `https://pantrypal15-1175d47ce25d.herokuapp.com/userItems/user/${userId}`
-            );
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const data = await response.json();
-            const favorites = data.filter((item) => item.isFavorite);
-            console.log("Favorites:", favorites);
-            return favorites;
-        } catch (error) {
-            console.error("Detailed error:", error);
-            return [];
+        const storedUserId = await AsyncStorage.getItem("userId");
+        if (!storedUserId) {
+          router.push("/logIn");
+          return;
         }
-    };
 
-    const fetchFavoriteDetails = async (favorites) => {
-        console.log("Fetching details:");
-        const updatedFavorites = await Promise.all(
-            favorites.map(async (item) => {
-                try {
-                    const response = await fetch(
-                        `https://pantrypal15-1175d47ce25d.herokuapp.com/items/${item.itemId}`
-                    );
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
-                    }
-                    const data = await response.json();
-                    console.log("Item:", data);
-                    return {
-                        ...item,
-                        src: data.itemUrl,
-                        title: data.itemName,
-                        category: data.itemCategory,
-                        is_favorite: true,
-                    };
-                } catch (error) {
-                    console.error("Detailed error:", error);
-                    return item;
-                }
-            })
-        );
-        setFavoriteItems(updatedFavorites);
-        setFilteredItems(updatedFavorites);
+        // Get all items with favorite status
+        const items = await fetchItems();
+        const favorites = items.filter((item) => item.is_favorite);
 
-        const categories = updatedFavorites.map((item) => item.category);
+        setFavoriteItems(favorites);
+        setFilteredItems(favorites);
+
+        // Set categories
+        const categories = favorites.map((item) => item.itemCategory);
         const uniqueCategories = [...new Set(categories)];
         setCategories(uniqueCategories);
+      } catch (error) {
+        console.error("Error checking auth:", error);
+        router.push("/logIn");
+      }
     };
 
-    // Execute functions
-    const loadFavorites = async () => {
-        const userId = await fetchUserId();
-        const favorites = await fetchFavoriteItems(userId);
-        await fetchFavoriteDetails(favorites);
-    };
-
-    loadFavorites();
-}, []); 
+    checkAuthAndLoadItems();
+  }, []);
 
   // Category filter function
   const handleCategoryFilter = (category) => {
@@ -124,39 +83,24 @@ const Favorites = () => {
       setFilteredItems(filtered);
     }
   };
+
   const handleFavoriteToggle = async (itemId) => {
     try {
-      const response = await fetch(
-        `https://pantrypal15-1175d47ce25d.herokuapp.com/userItems/${itemId}`,
-        {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            is_favorite: false, // We're always unfavoriting in this view
-          }),
-        }
-      );
+      await toggleFavorite(itemId, false); // Always false in Favorites view
 
-      if (!response.ok) {
-        throw new Error("Failed to toggle favorite");
-      }
-
-      // Remove the item from the favorites list
-      const updatedItems = favoriteItems.filter(
-        (item) => item.itemId !== itemId
-      );
+      // Update local state
+      const updatedItems = favoriteItems.filter((item) => item.id !== itemId);
       setFavoriteItems(updatedItems);
       setFilteredItems(
         selectedCategory
-          ? updatedItems.filter((item) => item.category === selectedCategory)
+          ? updatedItems.filter((item) => item.itemCategory === selectedCategory)
           : updatedItems
       );
     } catch (error) {
       console.error("Error toggling favorite:", error);
     }
   };
+
   const ItemModal = ({ item, visible, onClose }) => (
     <Modal
       animationType="fade"
@@ -192,10 +136,8 @@ const Favorites = () => {
     <View style={styles.container}>
       <View style={styles.content}>
         <View style={styles.headerSection}>
-          {/* Title */}
           <View style={styles.headerRow}>
             <Text style={styles.title}>PantryPal</Text>
-            {/* Navigation */}
             <View style={styles.navigation}>
               <Link href="/" style={styles.navText}>
                 <Text>my pantry</Text>
@@ -210,12 +152,10 @@ const Favorites = () => {
             </View>
           </View>
 
-          {/* Username */}
           <View style={styles.titleRow}>
             <Text style={styles.username}>Favorites</Text>
           </View>
 
-          {/* Search bar */}
           <View style={styles.searchSection}>
             <Ionicons
               style={styles.searchIcon}
@@ -227,13 +167,21 @@ const Favorites = () => {
               style={styles.input}
               placeholder="Search favorites..."
               placeholderTextColor="#BCABAB"
+              value={searchQuery}
+              onChangeText={setSearchQuery}
             />
+            {searchQuery.length > 0 && (
+              <TouchableOpacity
+                style={styles.clearButton}
+                onPress={() => setSearchQuery("")}
+              >
+                <Ionicons name="close-circle" size={20} color="#BCABAB" />
+              </TouchableOpacity>
+            )}
           </View>
         </View>
 
-        {/* Main Content Area */}
         <View style={styles.mainContentContainer}>
-          {/* Categories */}
           <View style={styles.categoriesContainer}>
             {categories.map((category) => (
               <TouchableOpacity
@@ -249,7 +197,6 @@ const Favorites = () => {
             ))}
           </View>
 
-          {/* Scrollable Content */}
           <ScrollView
             horizontal
             showsHorizontalScrollIndicator={true}

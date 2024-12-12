@@ -18,8 +18,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const { width } = Dimensions.get("window");
 const isMobile = width < 600;
 
-
-
 const Restock = () => {
   const [fontsLoaded] = useFonts({
     Montaga: require("../../assets/fonts/Montaga-Regular.ttf"),
@@ -30,6 +28,7 @@ const Restock = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [lowItems, setLowItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
+  const [userId, setUserId] = useState(null);
 
   if (!fontsLoaded) return null;
 
@@ -39,7 +38,16 @@ const Restock = () => {
   };
 
   useEffect(() => {
-    const fetchLowItems = async () => {
+    const fetchUserId = async () => {
+      try {
+        const userId = await AsyncStorage.getItem("userId");
+        setUserId(userId);
+        return userId;
+      } catch (error) {
+        console.error("Error fetching user ID:", error);
+      }
+    };
+    const fetchLowItems = async (userId) => {
       try {
         const response = await fetch(
           `https://pantrypal15-1175d47ce25d.herokuapp.com/userItems/user/${userId}`
@@ -91,9 +99,13 @@ const Restock = () => {
       setCategories(uniqueCategories);
     };
 
-    fetchLowItems().then((lowItems) => {
-      fetchLowItemDetails(lowItems);
-    });
+    const loadItems = async () => {
+      const userId = await fetchUserId();
+      const lowItems = await fetchLowItems(userId);
+      await fetchLowItemDetails(lowItems);
+    };
+
+    loadItems();
   }, []);
 
   // Add category filter function
@@ -108,6 +120,109 @@ const Restock = () => {
     }
   };
 
+  const handleAddQuantity = async (itemId) => {
+    try {
+      const currentItem = lowItems.find((item) => item.id === itemId);
+      if (!currentItem) {
+        throw new Error("Item not found in state.");
+      }
+
+      // Increment the quantity
+      const updatedQuantity = currentItem.quantity + 1;
+
+      // Send the updated quantity to the server
+      const updateResponse = await fetch(
+        `https://pantrypal15-1175d47ce25d.herokuapp.com/userItems/${itemId}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ quantity: updatedQuantity }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!updateResponse.ok) {
+        throw new Error(`HTTP error! status: ${updateResponse.status}`);
+      }
+
+      console.log("Updated item:", updatedQuantity);
+
+      const updatedItem = await updateResponse.json();
+
+      // Update the state with the new quantity
+      setLowItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === itemId
+            ? { ...item, quantity: updatedItem.quantity }
+            : item
+        )
+      );
+      setFilteredItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === itemId
+            ? { ...item, quantity: updatedItem.quantity }
+            : item
+        )
+      );
+    } catch (error) {
+      console.error("Error adding quantity:", error);
+      // Optionally, show user feedback
+      alert("Failed to update item quantity. Please try again.");
+    }
+  };
+
+  const handleSubtractQuantity = async (itemId) => {
+    try {
+      const currentItem = lowItems.find((item) => item.id === itemId);
+      if (!currentItem) {
+        throw new Error("Item not found in state.");
+      }
+
+      // Increment the quantity
+      if (currentItem.quantity === 0) {
+        return;
+      }
+      const updatedQuantity = currentItem.quantity - 1;
+
+      // Send the updated quantity to the server
+      const updateResponse = await fetch(
+        `https://pantrypal15-1175d47ce25d.herokuapp.com/userItems/${itemId}`,
+        {
+          method: "PATCH",
+          body: JSON.stringify({ quantity: updatedQuantity }),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!updateResponse.ok) {
+        throw new Error(`HTTP error! status: ${updateResponse.status}`);
+      }
+
+      const updatedItem = await updateResponse.json();
+
+      // Update the state with the new quantity
+      setLowItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === itemId
+            ? { ...item, quantity: updatedItem.quantity }
+            : item
+        )
+      );
+      setFilteredItems((prevItems) =>
+        prevItems.map((item) =>
+          item.id === itemId
+            ? { ...item, quantity: updatedItem.quantity }
+            : item
+        )
+      );
+    } catch (error) {
+      console.error("Error adding quantity:", error);
+      // Optionally, show user feedback
+      alert("Failed to update item quantity. Please try again.");
+    }
+  };
+
   const ItemModal = ({ item, visible, onClose }) => (
     <Modal
       animationType="fade"
@@ -115,18 +230,42 @@ const Restock = () => {
       visible={visible}
       onRequestClose={onClose}
     >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContent}>
-          <TouchableOpacity style={styles.backButton} onPress={onClose}>
-            <Ionicons name="arrow-back" size={24} color="#BCABAB" />
-          </TouchableOpacity>
-          <Image source={{ uri: item?.src }} style={styles.modalImage} />
-          <View style={styles.modalInfo}>
-            <Text style={styles.modalTitle}>{item?.title}</Text>
-            <Text style={styles.modalDetails}>Category: {item?.category}</Text>
+      <TouchableOpacity
+        style={styles.modalOverlay}
+        activeOpacity={1}
+        onPress={onClose} // This will close the modal when clicking the overlay
+      >
+        <TouchableOpacity
+          style={styles.modalContent}
+          activeOpacity={1}
+          onPress={(e) => e.stopPropagation()} // This prevents closing when clicking the content
+        >
+          <View style={styles.modalImageContainer}>
+            <Image source={{ uri: item?.src }} style={styles.modalImage} />
           </View>
-        </View>
-      </View>
+
+          <Text style={styles.modalTitle}>{item?.title}</Text>
+          <Text style={styles.modalCategory}>Category: {item?.category}</Text>
+
+          <View style={styles.quantityControls}>
+            <TouchableOpacity
+              style={styles.quantityButton}
+              onPress={() => handleSubtractQuantity(item.id)}
+            >
+              <Text style={styles.quantityButtonText}>−</Text>
+            </TouchableOpacity>
+
+            <Text style={styles.modalQuantity}>Quantity: {item?.quantity}</Text>
+
+            <TouchableOpacity
+              style={styles.quantityButton}
+              onPress={() => handleAddQuantity(item.id)}
+            >
+              <Text style={styles.quantityButtonText}>+</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </TouchableOpacity>
     </Modal>
   );
 
@@ -195,39 +334,20 @@ const Restock = () => {
 
           {/* Scrollable Content */}
           <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={true}
             contentContainerStyle={styles.scrollContainer}
+            showsVerticalScrollIndicator={false}
           >
             <View style={styles.gridContainer}>
-              <View style={styles.gridRow}>
-                {filteredItems
-                  .slice(0, Math.ceil(filteredItems.length / 2))
-                  .map((item, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={styles.imageBackground}
-                      onPress={() => openModal(item)}
-                    >
-                      <Image source={{ uri: item?.src }} style={styles.image} />
-                      <Text style={styles.quantityText}>{item?.quantity}</Text>
-                    </TouchableOpacity>
-                  ))}
-              </View>
-              <View style={styles.gridRow}>
-                {filteredItems
-                  .slice(Math.ceil(filteredItems.length / 2))
-                  .map((item, index) => (
-                    <TouchableOpacity
-                      key={index}
-                      style={styles.imageBackground}
-                      onPress={() => openModal(item)}
-                    >
-                      <Image source={{ uri: item?.src }} style={styles.image} />
-                      <Text style={styles.quantityText}>{item?.quantity}</Text>
-                    </TouchableOpacity>
-                  ))}
-              </View>
+              {filteredItems.map((item, index) => (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.imageBackground}
+                  onPress={() => openModal(item)}
+                >
+                  <Image source={{ uri: item?.src }} style={styles.image} />
+                  <Text style={styles.quantityText}>{item?.quantity}</Text>
+                </TouchableOpacity>
+              ))}
             </View>
           </ScrollView>
         </View>
@@ -249,6 +369,7 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    width: "100%",
     paddingLeft: 20,
   },
   headerSection: {
@@ -259,6 +380,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginTop: isMobile ? 32 : 40,
     alignItems: "center",
+    paddingRight: 20,
   },
   navigation: {
     flexDirection: "row",
@@ -274,6 +396,7 @@ const styles = StyleSheet.create({
   mainContentContainer: {
     flex: 1,
     flexDirection: "row",
+    marginTop: 20,
   },
   categoriesContainer: {
     width: 100,
@@ -287,17 +410,14 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     paddingHorizontal: 10,
   },
+  selectedCategory: {
+    backgroundColor: "#524242",
+  },
   categoryText: {
     fontFamily: "Montaga",
     fontSize: 16,
     color: "#BCABAB",
     textAlign: "center",
-  },
-  selectedCategory: {
-    backgroundColor: "#524242",
-  },
-  scrollContainer: {
-    paddingRight: 40,
   },
   title: {
     fontFamily: "Montaga",
@@ -331,25 +451,23 @@ const styles = StyleSheet.create({
     padding: 12,
     color: "#BCABAB",
     fontSize: 16,
+    fontFamily: "Montaga",
+  },
+  scrollContainer: {
+    flexGrow: 1,
+    paddingRight: 40,
   },
   gridContainer: {
-    marginRight: 40,
-    height: "100%",
-    alignContent: "center",
-    justifyContent: "center",
-  },
-  gridRow: {
+    flex: 1,
     flexDirection: "row",
-    marginBottom: 20,
+    flexWrap: "wrap",
+    gap: 20,
   },
   imageBackground: {
     width: 200,
-    height: 230,
+    height: 300,
     backgroundColor: "#685858",
     borderRadius: 25,
-    marginRight: 20,
-    justifyContent: "center",
-    alignItems: "center",
     overflow: "hidden",
     position: "relative",
   },
@@ -358,6 +476,18 @@ const styles = StyleSheet.create({
     height: "100%",
     resizeMode: "cover",
   },
+  quantityText: {
+    position: "absolute",
+    bottom: 15,
+    right: 15,
+    fontFamily: "Montaga",
+    fontSize: 18,
+    color: "#ffffff",
+    backgroundColor: "rgba(55, 48, 48, 0.7)",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 15,
+  },
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",
@@ -365,52 +495,69 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   modalContent: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: [{ translateX: -200 }, { translateY: -200 }],
     backgroundColor: "#373030",
-    borderRadius: 15,
+    borderRadius: 25,
     padding: 20,
     width: 400,
-    maxHeight: "80%",
+    alignItems: "center",
+  },
+  modalImageContainer: {
+    width: "100%",
+    height: 250,
+    borderRadius: 25,
+    overflow: "hidden",
+    marginBottom: 20,
   },
   modalImage: {
     width: "100%",
-    height: 300,
-    borderRadius: 15,
-    marginBottom: 15,
-  },
-  modalInfo: {
-    width: "100%",
-    alignItems: "center",
+    height: "100%",
+    resizeMode: "cover",
   },
   modalTitle: {
     fontFamily: "Montaga",
     fontSize: 24,
     color: "#ffffff",
     marginBottom: 10,
+    textAlign: "center",
   },
-  modalDetails: {
+  modalCategory: {
     fontFamily: "Montaga",
     fontSize: 18,
     color: "#BCABAB",
-    marginBottom: 5,
+    marginBottom: 20,
   },
-  backButton: {
-    position: "absolute",
-    top: 20,
-    left: 20,
-    padding: 10,
-    zIndex: 1,
+  quantityControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 20,
   },
-  quantityText: {
-    position: "absolute",
-    bottom: 10,
-    right: 10,
+  quantityButton: {
+    backgroundColor: "#524242",
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  quantityButtonText: {
+    color: "#BCABAB",
+    fontSize: 24,
+    fontFamily: "Montaga",
+  },
+  modalQuantity: {
     fontFamily: "Montaga",
     fontSize: 18,
-    color: "#ffffff",
+    color: "#BCABAB",
+  },
+  closeButton: {
+    position: "absolute",
+    top: 15,
+    right: 15,
+    backgroundColor: "#524242",
+    borderRadius: 20,
+    padding: 8,
+    zIndex: 1,
   },
 });
 

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   View,
   Text,
@@ -58,9 +59,22 @@ const Index = () => {
   });
 
   useEffect(() => {
-    loadItems();
-  }, []);
+    const checkAuthAndLoadItems = async () => {
+        try {
+            const userId = await AsyncStorage.getItem("userId");
+            if (!userId) {
+                router.push("/logIn");
+                return;
+            }
+            loadItems();
+        } catch (error) {
+            console.error("Error checking auth:", error);
+            router.push("/logIn");
+        }
+    };
 
+    checkAuthAndLoadItems();
+}, []);
   // New effect to handle both search and category filtering
   useEffect(() => {
     let result = pantryItems;
@@ -101,11 +115,15 @@ const Index = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("userId");
-    setIsUserModalVisible(false);
-    router.push("/logIn");
-  };
+  const handleLogout = async () => {
+    try {
+        await AsyncStorage.removeItem("userId");
+        setIsUserModalVisible(false);
+        router.push("/logIn");
+    } catch (error) {
+        console.error("Error during logout:", error);
+    }
+};
 
   const handleFavoriteToggle = async (itemId) => {
     try {
