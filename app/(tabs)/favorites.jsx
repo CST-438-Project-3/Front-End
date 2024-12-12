@@ -13,11 +13,12 @@ import {
 import { useFonts } from "expo-font";
 import { Link } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 const isMobile = width < 600;
 
-const userId = localStorage.getItem("userId");
+
 
 const Favorites = () => {
   const [fontsLoaded] = useFonts({
@@ -29,6 +30,7 @@ const Favorites = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [favoriteItems, setFavoriteItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
+  const [userId, setUserId] = useState("");
 
   if (!fontsLoaded) return null;
 
@@ -38,7 +40,16 @@ const Favorites = () => {
   };
 
   useEffect(() => {
-    const fetchFavoriteItems = async () => {
+    const fetchUserId = async () => {
+      try {
+        const userId = await AsyncStorage.getItem("userId");
+        setUserId(userId);
+      } catch (error) {
+        console.error("Error fetching user ID:", error);
+      }
+      return userId;
+    };
+    const fetchFavoriteItems = async (userId) => {
         try {
             const response = await fetch(
                 `https://pantrypal15-1175d47ce25d.herokuapp.com/userItems/user/${userId}`
@@ -92,7 +103,8 @@ const Favorites = () => {
 
     // Execute functions
     const loadFavorites = async () => {
-        const favorites = await fetchFavoriteItems();
+        const userId = await fetchUserId();
+        const favorites = await fetchFavoriteItems(userId);
         await fetchFavoriteDetails(favorites);
     };
 

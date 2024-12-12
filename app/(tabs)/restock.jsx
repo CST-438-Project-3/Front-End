@@ -13,11 +13,12 @@ import {
 import { useFonts } from "expo-font";
 import { Link } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 const isMobile = width < 600;
 
-const userId = localStorage.getItem("userId");
+
 
 const Restock = () => {
   const [fontsLoaded] = useFonts({
