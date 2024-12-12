@@ -10,8 +10,8 @@ import {
 import { useRouter } from "expo-router";
 import * as Google from 'expo-auth-session/providers/google';
 import { useFonts } from 'expo-font';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-localStorage.setItem('userId', '');
 
 const LogIn = () => {
     const [username, setusername] = useState('');
@@ -69,6 +69,7 @@ const LogIn = () => {
             if (response.ok) {
                 const data = await response.json();
                 console.log('Login successful:', data);
+                await AsyncStorage.setItem('userId', data);
                 localStorage.setItem('userId', data);
                 router.push('/(tabs)');
             } else {
