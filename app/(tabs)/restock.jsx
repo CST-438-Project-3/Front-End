@@ -1,350 +1,224 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Dimensions, TextInput, ScrollView, TouchableOpacity, Modal, Image } from "react-native";
+import { View, Text, StyleSheet, Dimensions, TextInput, ScrollView, Image, Modal, TouchableOpacity } from "react-native";
 import { useFonts } from 'expo-font';
-import { Link, useRouter } from 'expo-router';
+import { Link } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
-
-import { usePantry } from '../hooks/usePantry';
 
 const { width } = Dimensions.get('window');
 const isMobile = width < 600;
 
-const categories = [
-   'papers',
-   'fruit', 
-   'vegetable',
-   'meat',
-   'seafood',
-   'dairy',
-   'grain',
-   'condiment'
-];
+const userId = '1'; // change to user id
+
 
 const Restock = () => {
-   const [selectedCategory, setSelectedCategory] = useState(null);
-   const [pantryItems, setPantryItems] = useState([]);
-   const [filteredItems, setFilteredItems] = useState([]);
-   const [isUserModalVisible, setIsUserModalVisible] = useState(false);
-   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
-   const [selectedItem, setSelectedItem] = useState(null);
-   const [isItemModalVisible, setIsItemModalVisible] = useState(false);
-   const [newItemData, setNewItemData] = useState({
-       item_name: '',
-       item_category: '',
-       item_url: '',
-       item_quantity: '',
-       is_favorite: ''
-   });
-   const [isLoading, setIsLoading] = useState(true);
-   const [error, setError] = useState(null);
-   
-   const router = useRouter();
-   const { fetchItems, addItem } = usePantry();
+    const [fontsLoaded] = useFonts({
+        'Montaga': require('../../assets/fonts/Montaga-Regular.ttf'),
+    });
+    const [selectedItem, setSelectedItem] = useState(null);
+    const [modalVisible, setModalVisible] = useState(false);
+    const [categories, setCategories] = useState([]);
+    const [selectedCategory, setSelectedCategory] = useState(null);
+    const [lowItems, setLowItems] = useState([]);
+    const [filteredItems, setFilteredItems] = useState([]);
 
-   const [fontsLoaded] = useFonts({
-       'Montaga': require('../../assets/fonts/Montaga-Regular.ttf'),
-   });
+    if (!fontsLoaded) return null;
 
-   useEffect(() => {
-       loadItems();
-   }, []);
+    const openModal = (item) => {
+        setSelectedItem(item);
+        setModalVisible(true);
+    };
 
-   const loadItems = async () => {
-    try {
-        setIsLoading(true);
-        const items = await fetchItems();
-        console.log('Fetched items:', items);
-        console.log('First item structure:', items[0]);
-        if (Array.isArray(items)) {
-            setPantryItems(items);
-            setFilteredItems(items);
+    useEffect(() => {
+        const fetchLowItems = async () => {
+            try {
+                const response = await fetch(`https://pantrypal15-1175d47ce25d.herokuapp.com/userItems/user/${userId}`);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                const lowItems = data.filter(item => item.quantity <= 4);
+                console.log('Low items:', lowItems);
+                return lowItems;
+            } catch (error) {
+                console.error('Detailed error:', error);
+                return [];
+            }
+        };
+
+        const fetchLowItemDetails = async (lowItems) => {
+            console.log('Fetching details:');
+            const updatedLowItems = await Promise.all(lowItems.map(async (item) => {
+                try {
+                    const response = await fetch(`https://pantrypal15-1175d47ce25d.herokuapp.com/items/${item.itemId}`);
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const data = await response.json();
+                    console.log('Item:', data);
+                    return {
+                        ...item,
+                        src: data.itemUrl,
+                        title: data.itemName,
+                        category: data.itemCategory,
+                        quantity: item.quantity,
+                    };
+                } catch (error) {
+                    console.error('Detailed error:', error);
+                    return item;
+                }
+            }));
+            setLowItems(updatedLowItems);
+            setFilteredItems(updatedLowItems);
+
+            const categories = updatedLowItems.map(item => item.category);
+            const uniqueCategories = [...new Set(categories)];
+            setCategories(uniqueCategories);
+        };
+
+        fetchLowItems().then(lowItems => {
+            fetchLowItemDetails(lowItems);
+        });
+    }, []);
+
+    // Add category filter function
+    const handleCategoryFilter = (category) => {
+        if (selectedCategory === category) {
+            setSelectedCategory(null);
+            setFilteredItems(lowItems);
         } else {
-            console.error('Items is not an array:', items);
-            setError('Invalid data format received');
-        }
-    } catch (error) {
-        console.error('Error loading items:', error);
-        setError('Failed to load items: ' + error.message);
-    } finally {
-        setIsLoading(false);
-    }
-    };
-   const handleLogout = () => {
-        setIsUserModalVisible(false);
-        router.push('/logIn');
-    };
-    const handleFavoriteToggle = async (itemId) => {
-        try {
-            // Refresh items after toggle
-            const updatedItems = await fetchItems();
-            console.log('Updated items after toggle:', updatedItems);
-            setPantryItems(updatedItems);
-            
-            // Update filtered items
-            if (selectedCategory) {
-                const filtered = updatedItems.filter(item => item.itemCategory === selectedCategory);
-                setFilteredItems(filtered);
-            } else {
-                setFilteredItems(updatedItems);
-            }
-            
-            // If the modal is open, update the selected item
-            if (selectedItem && selectedItem.id === id) {  
-                const updatedItem = updatedItems.find(item => item.id === id);
-                setSelectedItem(updatedItem);
-            }
-        } catch (error) {
-            console.error('Error in handleFavoriteToggle:', error);
+            setSelectedCategory(category);
+            const filtered = lowItems.filter(item => item.category === category);
+            setFilteredItems(filtered);
         }
     };
-   const handleAddItem = async () => {
-       try {
-           const newItem = await addItem(newItemData);
-           setPantryItems(prev => [...prev, newItem]);
-           setFilteredItems(prev => [...prev, newItem]);
-           setIsAddModalVisible(false);
-           setNewItemData({ item_name: '', item_category: '', item_url: '' });
-       } catch (error) {
-           console.error('Failed to add item:', error);
-       }
-   };
 
-   const handleCategoryFilter = (category) => {
-    setSelectedCategory(category === selectedCategory ? null : category);
-    if (category && category !== selectedCategory) {
-        const filtered = pantryItems.filter(item => item.itemCategory === category); // Changed from item_category to itemCategory
-        setFilteredItems(filtered);
-    } else {
-        setFilteredItems(pantryItems);
-    }
-    };
-
-   if (!fontsLoaded) return null;
-
-   if (isLoading) {
-       return (
-           <View style={[styles.container, styles.centerContent]}>
-               <Text style={styles.loadingText}>Loading pantry items...</Text>
-           </View>
-       );
-   }
-
-   if (error) {
-       return (
-           <View style={[styles.container, styles.centerContent]}>
-               <Text style={styles.errorText}>{error}</Text>
-           </View>
-       );
-   }
-
-   const renderGrid = (startIndex) => {
-    console.log('filteredItems:', filteredItems);
-
-    if (!filteredItems?.length) {
-        console.log('No items found');
-        return (
-            <View style={styles.gridContainer}>
-                <Text style={styles.itemTitle}>No items found</Text>
+    const ItemModal = ({ item, visible, onClose }) => (
+        <Modal
+            animationType="fade"
+            transparent={true}
+            visible={visible}
+            onRequestClose={onClose}
+        >
+            <View style={styles.modalOverlay}>
+                <View style={styles.modalContent}>
+                    <TouchableOpacity 
+                        style={styles.backButton} 
+                        onPress={onClose}
+                    >
+                        <Ionicons name="arrow-back" size={24} color="#BCABAB" />
+                    </TouchableOpacity>
+                    <Image source={ {uri: item?.src} } style={styles.modalImage} />
+                    <View style={styles.modalInfo}>
+                        <Text style={styles.modalTitle}>{item?.title}</Text>
+                        <Text style={styles.modalDetails}>Category: {item?.category}</Text>
+                    </View>
+                </View>
             </View>
-        );
-    }
+        </Modal>
+    );
 
-    console.log('Rendering items:', filteredItems.slice(startIndex, startIndex + 3));
+
     return (
-        <View style={styles.gridContainer}>
-            <View style={styles.gridRow}>
-                {filteredItems.slice(startIndex, startIndex + 3).map((item) => {
-                    console.log('Rendering item:', item);
-                    return (
-                        <TouchableOpacity 
-                            key={item.id}
-                            style={styles.imageBackground}
-                            onPress={() => {
-                                setSelectedItem(item);
-                                setIsItemModalVisible(true);
-                            }}
-                        >
-                            <Image 
-                                source={{ uri: item.itemUrl }} 
-                                style={styles.itemImage}
-                            />
-                        </TouchableOpacity>
-                    );
-                })}
+        <View style={styles.container}>
+            <View style={styles.content}>
+                <View style={styles.headerSection}>
+                    {/* Title */}
+                    <View style={styles.headerRow}>
+                        <Text style={styles.title}>PantryPal</Text>
+                        {/* Navigation */}
+                        <View style={styles.navigation}>
+                            <Link href="/" style={styles.navText}>
+                                <Text>my pantry</Text>
+                            </Link>
+                            <Link href="/recipe" style={styles.navText}>
+                                <Text>recipes</Text>
+                            </Link>
+                            
+                                <Text style={styles.navText}>restock</Text>
+                            
+                            <Link href="/favorites" style={styles.navText}>favorites</Link>
+                        </View>
+                    </View>
+
+                    {/* Username */}
+                    <View style={styles.titleRow}>
+                        <Text style={styles.username}>Low Items</Text>
+                    </View>
+
+                    {/* Search bar */}
+                    <View style={styles.searchSection}>
+                        <Ionicons style={styles.searchIcon} name="search" size={24} color="#BCABAB" />
+                        <TextInput 
+                            style={styles.input}
+                            placeholder="Search low items..."
+                            placeholderTextColor="#BCABAB"
+                        />
+                    </View>
+                </View>
+
+                {/* Main Content Area */}
+                <View style={styles.mainContentContainer}>
+
+                    {/* Categories */}
+                    <View style={styles.categoriesContainer}>
+                        {categories.map((category) => (
+                            <TouchableOpacity 
+                                key={category}
+                                style={[
+                                    styles.categoryButton,
+                                    selectedCategory === category && styles.selectedCategory
+                                ]}
+                                onPress={() => handleCategoryFilter(category)}
+                            >
+                                <Text style={styles.categoryText}>{category}</Text>
+                            </TouchableOpacity>
+                        ))}
+                    </View>
+
+                    {/* Scrollable Content */}
+                    <ScrollView 
+                        horizontal 
+                        showsHorizontalScrollIndicator={true}
+                        contentContainerStyle={styles.scrollContainer}
+                    >
+                        <View style={styles.gridContainer}>
+                            <View style={styles.gridRow}>
+                                {filteredItems.slice(0, Math.ceil(filteredItems.length / 2)).map((item, index) => (
+                                    <TouchableOpacity 
+                                        key={index} 
+                                        style={styles.imageBackground}
+                                        onPress={() => openModal(item)}
+                                    >
+                                        <Image source={{uri: item?.src} } style={styles.image} />
+                                        <Text style={styles.quantityText}>{item?.quantity}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                            <View style={styles.gridRow}>
+                                {filteredItems.slice(Math.ceil(filteredItems.length / 2)).map((item, index) => (
+                                    <TouchableOpacity 
+                                        key={index} 
+                                        style={styles.imageBackground}
+                                        onPress={() => openModal(item)}
+                                    >
+                                        <Image source={{uri: item?.src} } style={styles.image} />
+                                        <Text style={styles.quantityText}>{item?.quantity}</Text>
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        </View>
+                    </ScrollView>
+
+                </View>
             </View>
+
+            <ItemModal 
+                item={selectedItem}
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+            />
         </View>
     );
-};
-
-   return (
-       <View style={styles.container}>
-           <View style={styles.content}>
-               <View style={styles.headerSection}>
-                   <View style={styles.headerRow}>
-                       <Text style={styles.title}>PantryPal</Text>
-                       <View style={styles.navigation}>
-                            <Link href="/" style={styles.navText}>
-                               <Text style={styles.navText}>pantry</Text>
-                           </Link>
-                           <Link href="/recipe" style={styles.navText}>
-                               <Text style={styles.navText}>recipes</Text>
-                           </Link>
-                           <Text style={styles.navText}>restock</Text>
-                           <Link href="/favorites" style={styles.navText}>
-                               <Text style={styles.navText}>favorites</Text>
-                           </Link>
-                       </View>
-                   </View>
-
-                   <View style={styles.titleRow}>
-                       <Text style={styles.username}>username</Text>
-                       <View style={styles.userControls}>
-                           <TouchableOpacity 
-                               style={styles.addButton}
-                               onPress={() => setIsAddModalVisible(true)}
-                           >
-                               <Ionicons name="add" size={isMobile ? 32 : 40} color="#BCABAB"/>
-                           </TouchableOpacity>
-                           <TouchableOpacity 
-                               onPress={() => setIsUserModalVisible(true)}
-                               style={styles.userButton}
-                           >
-                               <Ionicons name="person-circle-outline" size={isMobile ? 32 : 40} color="#BCABAB"/>
-                           </TouchableOpacity>
-                       </View>
-                   </View>
-
-                   <View style={styles.searchSection}>
-                       <Ionicons style={styles.searchIcon} name="search" size={24} color="#BCABAB" />
-                       <TextInput 
-                           style={styles.input}
-                           placeholder="Search pantry..."
-                           placeholderTextColor="#BCABAB"
-                       />
-                   </View>
-               </View>
-
-               <View style={styles.mainContentContainer}>
-                   <View style={styles.categoriesContainer}>
-                       {categories.map((category) => (
-                           <TouchableOpacity 
-                               key={category}
-                               style={[
-                                   styles.categoryButton,
-                                   selectedCategory === category && styles.selectedCategory
-                               ]}
-                               onPress={() => handleCategoryFilter(category)}
-                           >
-                               <Text style={styles.categoryText}>{category}</Text>
-                           </TouchableOpacity>
-                       ))}
-                   </View>
-
-                   <ScrollView 
-                       horizontal 
-                       showsHorizontalScrollIndicator={true}
-                       contentContainerStyle={styles.scrollContainer}
-                   >
-                       {renderGrid(0)}
-                   </ScrollView>
-               </View>
-           </View>
-
-           {/* Item Detail Modal */}
-           <Modal
-               animationType="fade"
-               transparent={true}
-               visible={isItemModalVisible}
-               onRequestClose={() => setIsItemModalVisible(false)}
-           >
-               <TouchableOpacity 
-                   style={styles.modalOverlay}
-                   activeOpacity={1}
-                   onPress={() => setIsItemModalVisible(false)}
-               >
-                   <View style={styles.itemModalContent}>
-                       {selectedItem && (
-                           <>
-                               <Image 
-                                    source={{ uri: selectedItem.itemUrl }}
-                                    style={styles.modalImage}
-                                />
-                                <Text style={styles.modalItemTitle}>{selectedItem.itemName}</Text>
-                                <Text style={styles.modalItemCategory}>
-                                    Category: {selectedItem.itemCategory}
-                                </Text>
-                           </>
-                       )}
-                   </View>
-               </TouchableOpacity>
-           </Modal>
-
-           {/* Add Item Modal */}
-           <Modal
-               animationType="fade"
-               transparent={true}
-               visible={isAddModalVisible}
-               onRequestClose={() => setIsAddModalVisible(false)}
-           >
-               <TouchableOpacity 
-                   style={styles.modalOverlay}
-                   activeOpacity={1}
-                   onPress={() => setIsAddModalVisible(false)}
-               >
-                   <View style={styles.addModalContent}>
-                       <TextInput
-                           style={styles.modalInput}
-                           placeholder="Item Name"
-                           value={newItemData.item_name}
-                           onChangeText={(text) => setNewItemData({...newItemData, item_name: text})}
-                       />
-                       <TextInput
-                           style={styles.modalInput}
-                           placeholder="Category"
-                           value={newItemData.item_category}
-                           onChangeText={(text) => setNewItemData({...newItemData, item_category: text})}
-                       />
-                       <TextInput
-                           style={styles.modalInput}
-                           placeholder="Image URL"
-                           value={newItemData.item_url}
-                           onChangeText={(text) => setNewItemData({...newItemData, item_url: text})}
-                       />
-                       <TouchableOpacity 
-                           style={styles.addItemButton}
-                           onPress={handleAddItem}
-                       >
-                           <Text style={styles.addItemButtonText}>Add Item</Text>
-                       </TouchableOpacity>
-                   </View>
-               </TouchableOpacity>
-           </Modal>
-
-           {/* User Modal */}
-           <Modal
-               animationType="fade"
-               transparent={true}
-               visible={isUserModalVisible}
-               onRequestClose={() => setIsUserModalVisible(false)}
-           >
-               <TouchableOpacity 
-                   style={styles.modalOverlay}
-                   activeOpacity={1}
-                   onPress={() => setIsUserModalVisible(false)}
-               >
-                   <View style={styles.userModalContent}>
-                       <TouchableOpacity 
-                           style={styles.userModalItem}
-                           onPress={handleLogout}
-                       >
-                           <Ionicons name="log-out-outline" size={24} color="#BCABAB" />
-                           <Text style={styles.userModalText}>Log Out</Text>
-                       </TouchableOpacity>
-                   </View>
-               </TouchableOpacity>
-           </Modal>
-       </View>
-   );
 };
 
 const styles = StyleSheet.create({
@@ -352,13 +226,8 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#524242',
     },
-    centerContent: {
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
     content: {
         flex: 1,
-        width: '100%',
         paddingLeft: 20,
     },
     headerSection: {
@@ -369,7 +238,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         marginTop: isMobile ? 32 : 40,
         alignItems: 'center',
-        paddingRight: 20,
     },
     navigation: {
         flexDirection: 'row',
@@ -385,7 +253,6 @@ const styles = StyleSheet.create({
     mainContentContainer: {
         flex: 1,
         flexDirection: 'row',
-        marginTop: 20,
     },
     categoriesContainer: {
         width: 100,
@@ -399,19 +266,17 @@ const styles = StyleSheet.create({
         paddingVertical: 15,
         paddingHorizontal: 10,
     },
+    categoryText: {
+        fontFamily: 'Montaga',
+        fontSize: 16,
+        color: '#BCABAB',
+        textAlign: 'center',
+    },
     selectedCategory: {
         backgroundColor: '#524242',
     },
     scrollContainer: {
         paddingRight: 40,
-    },
-    gridContainer: {
-        flex: 1,
-        paddingRight: 20,
-    },
-    gridRow: {
-        flexDirection: 'row',
-        marginBottom: 20,
     },
     title: {
         fontFamily: 'Montaga',
@@ -445,69 +310,40 @@ const styles = StyleSheet.create({
         padding: 12,
         color: '#BCABAB',
         fontSize: 16,
-        fontFamily: 'Montaga',
+    },
+    gridContainer: {
+        marginRight: 40,
+        height: '100%',
+        alignContent: 'center',
+        justifyContent: 'center',
+    },
+    gridRow: {
+        flexDirection: 'row',
+        marginBottom: 20,
     },
     imageBackground: {
         width: 200,
-        height: 300,
+        height: 230,
         backgroundColor: '#685858',
         borderRadius: 25,
         marginRight: 20,
-        overflow: 'hidden', // This ensures the image stays within bounds
-        position: 'relative', // For positioning the title overlay
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
+        position: 'relative',
     },
-    itemImage: {
+    image: {
         width: '100%',
-        height: '100%', // Changed from 80% to 100%
-        resizeMode: 'cover', // This will ensure the image covers the whole area
-    },
-    itemTitleContainer: {
-        position: 'absolute', // Position it over the image
-        bottom: 0, // Align to bottom
-        left: 0,
-        right: 0,
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: 'rgba(55, 48, 48, 0.8)',
-        padding: 10,
-    },
-    categoryText: {
-        fontFamily: 'Montaga',
-        fontSize: 16,
-        color: '#BCABAB',
-        textAlign: 'center',
-    },
-    userControls: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 15,
+        height: '100%',
+        resizeMode: 'cover',
     },
     modalOverlay: {
         flex: 1,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        justifyContent: 'flex-start',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
-    loadingText: {
-        color: '#BCABAB',
-        fontSize: 18,
-        textAlign: 'center',
-        fontFamily: 'Montaga',
-    },
-    errorText: {
-        color: '#ff6b6b',
-        fontSize: 18,
-        textAlign: 'center',
-        fontFamily: 'Montaga',
-    },
-    modalInput: {
-        backgroundColor: '#ffffff',
-        padding: 12,
-        borderRadius: 8,
-        marginBottom: 10,
-        width: '100%',
-        fontFamily: 'Montaga',
-    },
-    itemModalContent: {
+    modalContent: {
         position: 'absolute',
         top: '50%',
         left: '50%',
@@ -518,79 +354,43 @@ const styles = StyleSheet.create({
         width: 400,
         maxHeight: '80%',
     },
-    addModalContent: {
-        position: 'absolute',
-        top: '30%',
-        left: '50%',
-        transform: [{translateX: -150}],
-        backgroundColor: '#373030',
-        borderRadius: 15,
-        padding: 20,
-        width: 300,
-    },
-    userModalContent: {
-        position: 'absolute',
-        top: 100,
-        right: 20,
-        backgroundColor: '#373030',
-        borderRadius: 15,
-        padding: 10,
-        minWidth: 150,
-    },
-    userModalItem: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: 10,
-        gap: 10,
-    },
-    addItemButton: {
-        backgroundColor: '#524242',
-        padding: 12,
-        borderRadius: 8,
-        alignItems: 'center',
-    },
-    addItemButtonText: {
-        color: '#BCABAB',
-        fontFamily: 'Montaga',
-        fontSize: 16,
-    },
-    // itemTitle: {
-    //     color: '#BCABAB',
-    //     fontFamily: 'Montaga',
-    //     fontSize: 16,
-    //     textAlign: 'center',
-    //     flex: 1
-    // },
     modalImage: {
         width: '100%',
         height: 300,
         borderRadius: 15,
         marginBottom: 15,
     },
-    modalItemTitle: {
-        color: '#BCABAB',
+    modalInfo: {
+        width: '100%',
+        alignItems: 'center',
+    },
+    modalTitle: {
         fontFamily: 'Montaga',
         fontSize: 24,
-        textAlign: 'center',
+        color: '#ffffff',
         marginBottom: 10,
     },
-    modalItemCategory: {
-        color: '#BCABAB',
+    modalDetails: {
         fontFamily: 'Montaga',
         fontSize: 18,
-        textAlign: 'center',
-    },
-    userModalText: {
-        fontFamily: 'Montaga',
         color: '#BCABAB',
-        fontSize: 16,
+        marginBottom: 5,
     },
-    userButton: {
-        padding: 5,
+    backButton: {
+        position: 'absolute',
+        top: 20,
+        left: 20,
+        padding: 10,
+        zIndex: 1,
     },
-    addButton: {
-        padding: 5,
+    quantityText: {
+        position: 'absolute',
+        bottom: 10,
+        right: 10,
+        fontFamily: 'Montaga',
+        fontSize: 18,
+        color: '#ffffff',
     },
- });
+});
 
 export default Restock;
