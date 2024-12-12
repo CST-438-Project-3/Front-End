@@ -218,6 +218,40 @@ const Restock = () => {
     }
   };
 
+  
+
+  const handleFavoriteToggle = async (itemId) => {
+    try {
+      const currentItem = lowItems.find((item) => item.id === itemId);
+      if (!currentItem) {
+        throw new Error("Item not found in state.");
+      }
+
+      console.log("Current item:", currentItem);
+      const updatedFavorite = !currentItem.isFavorite;
+      console.log("Updated favorite:", updatedFavorite);
+
+      const response = await fetch(`https://pantrypal15-1175d47ce25d.herokuapp.com/userItems/${itemId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ isFavorite: updatedFavorite }),
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const updatedItem = await response.json();
+      setLowItems((prevItems) => prevItems.map((item) => item.id === itemId ? { ...item, isFavorite: updatedItem.favorite } : item));
+      setFilteredItems((prevItems) => prevItems.map((item) => item.id === itemId ? { ...item, isFavorite: updatedItem.favorite } : item));
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+      alert("Failed to toggle favorite status. Please try again.");
+    }
+  };
+      
+
+
   const ItemModal = ({ item, visible, onClose }) => (
     <Modal
       animationType="fade"
@@ -250,6 +284,30 @@ const Restock = () => {
                   <Ionicons name="add" size={24} color="#BCABAB" />
               </TouchableOpacity>
             </View>
+            <TouchableOpacity
+                    style={[
+                      styles.favoriteButton,
+                      selectedItem?.isFavorite && styles.favoriteButtonActive,
+                    ]}
+                    onPress={() => handleFavoriteToggle(selectedItem.id)}
+                  >
+                    <Ionicons
+                      name={selectedItem?.isFavorite ? "heart" : "heart-outline"}
+                      size={24}
+                      color={selectedItem?.isFavorite ? "#ff6b6b" : "#685858"}
+                    />
+                    <Text
+                      style={[
+                        styles.favoriteButtonText,
+                        selectedItem?.isFavorite &&
+                          styles.favoriteButtonTextActive,
+                      ]}
+                    >
+                      {selectedItem?.isFavorite
+                        ? "Favorited"
+                        : "Add to Favorites"}
+                    </Text>
+                  </TouchableOpacity>
           </View>
         </View>
       </View>
@@ -337,6 +395,22 @@ const Restock = () => {
                     >
                       <Image source={{ uri: item?.src }} style={styles.image} />
                       <Text style={styles.quantityText}>{item?.quantity}</Text>
+                      <TouchableOpacity
+                        style={[
+                          styles.favoriteIconContainer,
+                          item.isFavorite && styles.favoriteIconContainerActive,
+                        ]}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          handleFavoriteToggle(item.id);
+                        }}
+                      >
+                        <Ionicons
+                          name={item.isFavorite ? "heart" : "heart-outline"}
+                          size={24}
+                          color={item.isFavorite ? "#ff6b6b" : "#685858"}
+                        />
+                      </TouchableOpacity>
                     </TouchableOpacity>
                   ))}
               </View>
@@ -351,6 +425,22 @@ const Restock = () => {
                     >
                       <Image source={{ uri: item?.src }} style={styles.image} />
                       <Text style={styles.quantityText}>{item?.quantity}</Text>
+                      <TouchableOpacity
+                          style={[
+                            styles.favoriteIconContainer,
+                            item.isFavorite && styles.favoriteIconContainerActive,
+                          ]}
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            handleFavoriteToggle(item.id);
+                          }}
+                        >
+                          <Ionicons
+                            name={item.isFavorite ? "heart" : "heart-outline"}
+                            size={24}
+                            color={item.isFavorite ? "#ff6b6b" : "#685858"}
+                          />
+                      </TouchableOpacity>
                     </TouchableOpacity>
                   ))}
               </View>
@@ -544,6 +634,42 @@ const styles = StyleSheet.create({
   },
   quantityButton: {
       marginHorizontal: 10,
+  },
+  favoriteButtonTextActive: {
+    color: "#ff6b6b",
+  },
+  favoriteIconContainerActive: {
+    backgroundColor: "rgba(255, 255, 255, 0.5)",
+  },
+  favoriteIconContainer: {
+    position: "absolute",
+    top: 10,
+    right: 10,
+    backgroundColor: "rgba(255, 255, 255, 0.3)",
+    borderRadius: 20,
+    padding: 8,
+    zIndex: 1,
+  },
+  favoriteButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 10,
+    marginTop: 15,
+    backgroundColor: "#524242",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#ff6b6b",
+  },
+  favoriteButtonText: {
+    color: "#ff6b6b",
+    fontFamily: "Montaga",
+    fontSize: 16,
+    marginLeft: 8,
+  },
+  favoriteButtonActive: {
+    backgroundColor: "#ffffff15",
+    borderColor: "#ff6b6b",
   },
 });
 
