@@ -34,6 +34,7 @@ const Index = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [pantryItems, setPantryItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isUserModalVisible, setIsUserModalVisible] = useState(false);
   const [isAddModalVisible, setIsAddModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -60,6 +61,28 @@ const Index = () => {
     loadItems();
   }, []);
 
+  // New effect to handle both search and category filtering
+  useEffect(() => {
+    let result = pantryItems;
+
+    // Apply category filter if selected
+    if (selectedCategory) {
+      result = result.filter((item) => item.itemCategory === selectedCategory);
+    }
+
+    // Apply search filter if there's a search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase().trim();
+      result = result.filter(
+        (item) =>
+          item.itemName.toLowerCase().includes(query) ||
+          item.itemCategory.toLowerCase().includes(query)
+      );
+    }
+
+    setFilteredItems(result);
+  }, [searchQuery, selectedCategory, pantryItems]);
+
   const loadItems = async () => {
     try {
       setIsLoading(true);
@@ -85,15 +108,12 @@ const Index = () => {
 
   const handleFavoriteToggle = async (itemId) => {
     try {
-      // Look for current item and its favorite status
       const currentItem = pantryItems.find((item) => item.id === itemId);
       if (!currentItem) return;
 
-      // Convert to boolean and toggle (if it's undefined/null then it as false)
-      const currentStatus = Boolean(currentItem.is_favorite); // Convert to boolean
-      const newFavoriteStatus = !currentStatus; // Toggle boolean 
+      const currentStatus = Boolean(currentItem.is_favorite);
+      const newFavoriteStatus = !currentStatus;
 
-      // Update state with boolean value
       const updatedItems = pantryItems.map((item) =>
         item.id === itemId ? { ...item, is_favorite: newFavoriteStatus } : item
       );
@@ -127,7 +147,6 @@ const Index = () => {
     try {
       const newItem = await addItem(newItemData);
       setPantryItems((prev) => [...prev, newItem]);
-      setFilteredItems((prev) => [...prev, newItem]);
       setIsAddModalVisible(false);
       setNewItemData({
         item_name: "",
@@ -143,14 +162,10 @@ const Index = () => {
 
   const handleCategoryFilter = (category) => {
     setSelectedCategory(category === selectedCategory ? null : category);
-    if (category && category !== selectedCategory) {
-      const filtered = pantryItems.filter(
-        (item) => item.itemCategory === category
-      );
-      setFilteredItems(filtered);
-    } else {
-      setFilteredItems(pantryItems);
-    }
+  };
+
+  const handleSearch = (text) => {
+    setSearchQuery(text);
   };
 
   if (!fontsLoaded) return null;
@@ -273,162 +288,174 @@ const Index = () => {
               style={styles.input}
               placeholder="Search pantry..."
               placeholderTextColor="#BCABAB"
+              value={searchQuery}
+              onChangeText={handleSearch}
             />
-          </View>
-        </View>
-
-        <View style={styles.mainContentContainer}>
-          <View style={styles.categoriesContainer}>
-            {categories.map((category) => (
+            {searchQuery.length > 0 && (
               <TouchableOpacity
-                key={category}
-                style={[
-                  styles.categoryButton,
-                  selectedCategory === category && styles.selectedCategory,
-                ]}
-                onPress={() => handleCategoryFilter(category)}
+                style={styles.clearButton}
+                onPress={() => setSearchQuery("")}
               >
-                <Text style={styles.categoryText}>{category}</Text>
+                <Ionicons name="close-circle" size={20} color="#BCABAB" />
               </TouchableOpacity>
-            ))}
-          </View>
-
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={true}
-            contentContainerStyle={styles.scrollContainer}
-          >
-            {renderGrid(0)}
-          </ScrollView>
-        </View>
-      </View>
-
-      {/* Item Detail Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={isItemModalVisible}
-        onRequestClose={() => setIsItemModalVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setIsItemModalVisible(false)}
-        >
-          <View style={styles.itemModalContent}>
-            {selectedItem && (
-              <>
-                <Image
-                  source={{ uri: selectedItem.itemUrl }}
-                  style={styles.modalImage}
-                />
-                <Text style={styles.modalItemTitle}>
-                  {selectedItem.itemName}
-                </Text>
-                <Text style={styles.modalItemCategory}>
-                  Category: {selectedItem.itemCategory}
-                </Text>
-                <TouchableOpacity
-                  style={[
-                    styles.favoriteButton,
-                    selectedItem.isFavorite && styles.favoriteButtonActive,
-                  ]}
-                  onPress={() => handleFavoriteToggle(selectedItem.id)}
-                >
-                  <Ionicons
-                    name={selectedItem.isFavorite ? "heart" : "heart-outline"}
-                    size={24}
-                    color={selectedItem.isFavorite ? "#ff6b6b" : "#685858"}
-                  />
-                  <Text
-                    style={[
-                      styles.favoriteButtonText,
-                      selectedItem.isFavorite &&
-                        styles.favoriteButtonTextActive,
-                    ]}
-                  >
-                    {selectedItem.isFavorite ? "Favorited" : "Add to Favorites"}
-                  </Text>
-                </TouchableOpacity>
-              </>
             )}
           </View>
-        </TouchableOpacity>
-      </Modal>
 
-      {/* Add Item Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={isAddModalVisible}
-        onRequestClose={() => setIsAddModalVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setIsAddModalVisible(false)}
+          <View style={styles.mainContentContainer}>
+            <View style={styles.categoriesContainer}>
+              {categories.map((category) => (
+                <TouchableOpacity
+                  key={category}
+                  style={[
+                    styles.categoryButton,
+                    selectedCategory === category && styles.selectedCategory,
+                  ]}
+                  onPress={() => handleCategoryFilter(category)}
+                >
+                  <Text style={styles.categoryText}>{category}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={true}
+              contentContainerStyle={styles.scrollContainer}
+            >
+              {renderGrid(0)}
+            </ScrollView>
+          </View>
+        </View>
+
+        {/* Item Detail Modal */}
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={isItemModalVisible}
+          onRequestClose={() => setIsItemModalVisible(false)}
         >
-          <View
-            style={styles.addModalContent}
-            onStartShouldSetResponder={(e) => e.stopPropagation()}
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setIsItemModalVisible(false)}
           >
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Item Name"
-              value={newItemData.item_name}
-              onChangeText={(text) =>
-                setNewItemData({ ...newItemData, item_name: text })
-              }
-            />
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Category"
-              value={newItemData.item_category}
-              onChangeText={(text) =>
-                setNewItemData({ ...newItemData, item_category: text })
-              }
-            />
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Image URL"
-              value={newItemData.item_url}
-              onChangeText={(text) =>
-                setNewItemData({ ...newItemData, item_url: text })
-              }
-            />
-            <TouchableOpacity
-              style={styles.addItemButton}
-              onPress={handleAddItem}
-            >
-              <Text style={styles.addItemButtonText}>Add Item</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+            <View style={styles.itemModalContent}>
+              {selectedItem && (
+                <>
+                  <Image
+                    source={{ uri: selectedItem.itemUrl }}
+                    style={styles.modalImage}
+                  />
+                  <Text style={styles.modalItemTitle}>
+                    {selectedItem.itemName}
+                  </Text>
+                  <Text style={styles.modalItemCategory}>
+                    Category: {selectedItem.itemCategory}
+                  </Text>
+                  <TouchableOpacity
+                    style={[
+                      styles.favoriteButton,
+                      selectedItem.isFavorite && styles.favoriteButtonActive,
+                    ]}
+                    onPress={() => handleFavoriteToggle(selectedItem.id)}
+                  >
+                    <Ionicons
+                      name={selectedItem.isFavorite ? "heart" : "heart-outline"}
+                      size={24}
+                      color={selectedItem.isFavorite ? "#ff6b6b" : "#685858"}
+                    />
+                    <Text
+                      style={[
+                        styles.favoriteButtonText,
+                        selectedItem.isFavorite &&
+                          styles.favoriteButtonTextActive,
+                      ]}
+                    >
+                      {selectedItem.isFavorite
+                        ? "Favorited"
+                        : "Add to Favorites"}
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
+            </View>
+          </TouchableOpacity>
+        </Modal>
 
-      {/* User Modal */}
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={isUserModalVisible}
-        onRequestClose={() => setIsUserModalVisible(false)}
-      >
-        <TouchableOpacity
-          style={styles.modalOverlay}
-          activeOpacity={1}
-          onPress={() => setIsUserModalVisible(false)}
+        {/* Add Item Modal */}
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={isAddModalVisible}
+          onRequestClose={() => setIsAddModalVisible(false)}
         >
-          <View style={styles.userModalContent}>
-            <TouchableOpacity
-              style={styles.userModalItem}
-              onPress={handleLogout}
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setIsAddModalVisible(false)}
+          >
+            <View
+              style={styles.addModalContent}
+              onStartShouldSetResponder={(e) => e.stopPropagation()}
             >
-              <Ionicons name="log-out-outline" size={24} color="#BCABAB" />
-              <Text style={styles.userModalText}>Log Out</Text>
-            </TouchableOpacity>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Item Name"
+                value={newItemData.item_name}
+                onChangeText={(text) =>
+                  setNewItemData({ ...newItemData, item_name: text })
+                }
+              />
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Category"
+                value={newItemData.item_category}
+                onChangeText={(text) =>
+                  setNewItemData({ ...newItemData, item_category: text })
+                }
+              />
+              <TextInput
+                style={styles.modalInput}
+                placeholder="Image URL"
+                value={newItemData.item_url}
+                onChangeText={(text) =>
+                  setNewItemData({ ...newItemData, item_url: text })
+                }
+              />
+              <TouchableOpacity
+                style={styles.addItemButton}
+                onPress={handleAddItem}
+              >
+                <Text style={styles.addItemButtonText}>Add Item</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+
+        {/* User Modal */}
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={isUserModalVisible}
+          onRequestClose={() => setIsUserModalVisible(false)}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={() => setIsUserModalVisible(false)}
+          >
+            <View style={styles.userModalContent}>
+              <TouchableOpacity
+                style={styles.userModalItem}
+                onPress={handleLogout}
+              >
+                <Ionicons name="log-out-outline" size={24} color="#BCABAB" />
+                <Text style={styles.userModalText}>Log Out</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableOpacity>
+        </Modal>
+      </View>
     </View>
   );
 };
@@ -676,13 +703,6 @@ const styles = StyleSheet.create({
     fontFamily: "Montaga",
     fontSize: 16,
   },
-  // itemTitle: {
-  //     color: '#BCABAB',
-  //     fontFamily: 'Montaga',
-  //     fontSize: 16,
-  //     textAlign: 'center',
-  //     flex: 1
-  // },
   modalImage: {
     width: "100%",
     height: 300,
@@ -739,6 +759,9 @@ const styles = StyleSheet.create({
   },
   addButton: {
     padding: 5,
+  },
+  clearButton: {
+    padding: 8,
   },
 });
 
