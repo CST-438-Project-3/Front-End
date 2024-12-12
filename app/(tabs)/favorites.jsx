@@ -81,18 +81,19 @@ const Favorites = () => {
 
     // Add category filter function
     const handleCategoryFilter = (category) => {
-        setSelectedCategory(category);
-        if (category) {
+        if (selectedCategory === category) {
+            setSelectedCategory(null);
+            setFilteredItems(favoriteItems);
+        } else {
+            setSelectedCategory(category);
             const filtered = favoriteItems.filter(item => item.category === category);
             setFilteredItems(filtered);
-        } else {
-            setFilteredItems(favoriteItems);
         }
     };
 
     const ItemModal = ({ item, visible, onClose }) => (
         <Modal
-            animationType="slide"
+            animationType="fade"
             transparent={true}
             visible={visible}
             onRequestClose={onClose}
@@ -115,21 +116,6 @@ const Favorites = () => {
         </Modal>
     );
 
-    // const renderGrid = () => (
-    //     <View style={styles.gridContainer}>
-    //         <View style={styles.gridRow}>
-    //             {filteredItems.map((item) => (
-    //                 <TouchableOpacity 
-    //                     key={item.id} 
-    //                     style={styles.imageBackground}
-    //                     onPress={() => openModal(item)}
-    //                 >
-    //                     <Image source={item.src} style={styles.image} />
-    //                 </TouchableOpacity>
-    //             ))}
-    //         </View>
-    //     </View>
-    // );
 
     return (
         <View style={styles.container}>
@@ -271,6 +257,7 @@ const styles = StyleSheet.create({
         borderRadius: 15,
         paddingVertical: 20,
         marginRight: 20,
+        alignSelf: 'flex-start',
     },
     categoryButton: {
         paddingVertical: 15,
@@ -323,6 +310,9 @@ const styles = StyleSheet.create({
     },
     gridContainer: {
         marginRight: 40,
+        height: '100%',
+        alignContent: 'center',
+        justifyContent: 'center',
     },
     gridRow: {
         flexDirection: 'row',
@@ -330,17 +320,19 @@ const styles = StyleSheet.create({
     },
     imageBackground: {
         width: 200,
-        height: 300,
+        height: 230,
         backgroundColor: '#685858',
         borderRadius: 25,
         marginRight: 20,
         justifyContent: 'center',
         alignItems: 'center',
+        overflow: 'hidden',
+        position: 'relative',
     },
     image: {
-        width: 115,
-        height: 115,
-        borderRadius: 25,
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
     },
     modalOverlay: {
         flex: 1,
@@ -349,20 +341,21 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     modalContent: {
-        width: isMobile ? '90%' : '60%',
-        backgroundColor: '#685858',
-        borderRadius: 25,
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        transform: [{translateX: -200}, {translateY: -200}],
+        backgroundColor: '#373030',
+        borderRadius: 15,
         padding: 20,
-        alignItems: 'center',
-        position: 'relative',
-        height: 700,
-        width: 500,
+        width: 400,
+        maxHeight: '80%',
     },
     modalImage: {
-        width: 200,
-        height: 200,
-        borderRadius: 25,
-        marginVertical: 20,
+        width: '100%',
+        height: 300,
+        borderRadius: 15,
+        marginBottom: 15,
     },
     modalInfo: {
         width: '100%',
