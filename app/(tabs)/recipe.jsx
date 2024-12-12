@@ -10,7 +10,7 @@ const { width } = Dimensions.get("window");
 const isMobile = width < 600;
 
 
-const userId = '1';
+const userId = localStorage.getItem('userId');
 
 const Recipe = () => {
     const [items, setItems] = useState([]);
