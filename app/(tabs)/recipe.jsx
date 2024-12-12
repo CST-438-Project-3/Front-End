@@ -1,11 +1,14 @@
+
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Dimensions, FlatList, Image, TouchableOpacity, SafeAreaView, TextInput, Modal, ActivityIndicator } from 'react-native';
 import { useFonts } from 'expo-font';
 import { Link } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
 
-const { width } = Dimensions.get('window');
+
+const { width } = Dimensions.get("window");
 const isMobile = width < 600;
+
 
 const userId = '1';
 
@@ -16,13 +19,13 @@ const Recipe = () => {
     const [modalVisible, setModalVisible] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    const [fontsLoaded] = useFonts({
-        'Montaga': require('../../assets/fonts/Montaga-Regular.ttf'),
-    });
+  const [fontsLoaded] = useFonts({
+    Montaga: require("../../assets/fonts/Montaga-Regular.ttf"),
+  });
 
-    if (!fontsLoaded) {
-        return null;
-    }
+  if (!fontsLoaded) {
+    return null;
+  }
 
     useEffect(() => {
         const fetchItems = async () => {

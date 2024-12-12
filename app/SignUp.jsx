@@ -12,9 +12,14 @@ import { useRouter } from "expo-router";
 import { useFonts } from 'expo-font';
 
 const SignUp = () => {
-    const [email, setEmail] = useState('');
+    const [username, setUsername] = useState('');  
     const [password, setPassword] = useState('');
     const [showModal, setShowModal] = useState(false);
+    const [error, setError] = useState('');
+    const [errorMessage, setErrorMessage] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [email, setEmail] = useState(""); 
+    const [name, setName] = useState("");
     const router = useRouter();
 
     const [fontsLoaded] = useFonts({
@@ -25,27 +30,56 @@ const SignUp = () => {
 
 
     const handleGoogleSignIn = async () => {
+
     };
+    
 
-    const handleSubmit = () => {
-        setShowModal(true);
-        setEmail('');
-        setPassword('');
-
-        setTimeout(() => {
-            setShowModal(false);
-            router.push('/logIn');
-        }, 2000);
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+    
+        const payload = {
+            username: username,
+            email: "",
+            password: password,
+            name: "", 
+            role: "USER",
+        };
+    
+        console.log("Payload:", payload);
+    
+        try {
+            const response = await fetch("https://pantrypal15-1175d47ce25d.herokuapp.com/users", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+    
+            // text from the response instead of JSON
+            let responseBody = "";
+            try {
+                responseBody = await response.text();  // get response as text
+            } catch (textError) {
+                console.error("Error parsing response as text:", textError);
+                responseBody = "Unexpected error, response is not text.";
+            }
+    
+            console.log("Response status:", response.status);
+            console.log("Response body:", responseBody);
+    
+            if (response.ok) {
+                alert("User registered successfully!");
+            } else {
+                throw new Error(responseBody || "An unexpected error occurred.");
+            }
+        } catch (error) {
+            console.error("Error occurred:", error.message);
+        }
     };
-
-    const handleLogin = () => {
+    
+    
+    const handleLogin = async () => {
         router.push('/logIn');
-    };
-
-    if (!fontsLoaded) {
-        return null;
     }
-
     return (
         <View style={styles.mainContainer}>
             <Modal
@@ -62,15 +96,19 @@ const SignUp = () => {
             </Modal>
 
             <Text style={styles.mainTitle}>Sign Up</Text>
-
+                {errorMessage ? (
+                        <View style={styles.errorContainer}>
+                            <Text style={styles.errorText}>{errorMessage}</Text>
+                        </View>
+                    ) : null}
             <View style={styles.inputGroup}>
-                <Text style={styles.label}>email</Text>
+                <Text style={styles.label}>username</Text>
                 <TextInput
                     style={styles.input}
-                    placeholder="your email"
+                    placeholder="your username"
                     placeholderTextColor="#846E6E"
-                    value={email}
-                    onChangeText={setEmail}
+                    value={username}
+                    onChangeText={setUsername}
                     autoCapitalize="none"
                 />
                 <View style={styles.inputLine} />
@@ -86,14 +124,18 @@ const SignUp = () => {
                     onChangeText={setPassword}
                     secureTextEntry
                 />
+                {error && <Text style={styles.errorText}>{error}</Text>}
                 <View style={styles.inputLine} />
             </View>
-
+            
             <TouchableOpacity 
-                style={styles.signUpButton}
+                style={[styles.signUpButton, isLoading && styles.disabledButton]}
                 onPress={handleSubmit}
+                disabled={isLoading}
             >
-                <Text style={styles.signUpButtonText}>Sign Up</Text>
+                <Text style={styles.signUpButtonText}>
+                    {isLoading ? 'Signing up...' : 'Sign Up'}
+                </Text>
             </TouchableOpacity>
 
             <View style={styles.loginContainer}>
@@ -125,6 +167,24 @@ const SignUp = () => {
 };
 
 const styles = StyleSheet.create({
+    errorText: {
+        color: '#ff6b6b',
+        fontSize: 14,
+        marginTop: 5,
+        fontFamily: 'Montaga',
+    },
+    errorContainer: {
+        width: '100%',
+        maxWidth: 400,
+        marginBottom: 10,
+        padding: 10,
+    },
+    errorText: {
+        color: '#ff6b6b',
+        fontFamily: 'Montaga',
+        fontSize: 14,
+        textAlign: 'center',
+    },
     mainContainer: {
         flex: 1,
         padding: 20,
@@ -180,6 +240,9 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontSize: 16,
         fontWeight: '500',
+    },
+    disabledButton: {
+        opacity: 0.7,
     },
     loginContainer: {
         flexDirection: 'row',
