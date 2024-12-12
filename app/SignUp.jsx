@@ -179,12 +179,6 @@ const styles = StyleSheet.create({
         marginBottom: 10,
         padding: 10,
     },
-    errorText: {
-        color: '#ff6b6b',
-        fontFamily: 'Montaga',
-        fontSize: 14,
-        textAlign: 'center',
-    },
     mainContainer: {
         flex: 1,
         padding: 20,

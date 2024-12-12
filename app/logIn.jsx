@@ -1,47 +1,50 @@
 import React, { useState } from 'react';
-import { 
-    View, 
-    Text, 
-    TextInput, 
-    TouchableOpacity, 
-    StyleSheet, 
-    Dimensions 
+import {
+    View,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    StyleSheet
 } from "react-native";
 import { useRouter } from "expo-router";
-import * as Google from 'expo-auth-session/providers/google';
+import { useGoogleAuth } from '@/hooks/oauth';
 import { useFonts } from 'expo-font';
 
 const LogIn = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const router = useRouter();
+    const { handleGoogleSignIn } = useGoogleAuth();
 
     const [fontsLoaded] = useFonts({
         'Montaga': require('../assets/fonts/Montaga-Regular.ttf'),
     });
 
-    const [request, response, promptAsync] = Google.useAuthRequest({
-        clientId: '698834273975-7pg91b1vub04e2rtbtn6sleghqq6lkrf.apps.googleusercontent.com',
-        iosClientId: '698834273975-sf9t82034o2l5sgci68je6nikd3el92b.apps.googleusercontent.com'
-    });
-
-    const handleGoogleSignIn = async () => {
+    const handleManualLogin = async () => {
         try {
-            const result = await promptAsync();
-            if (result?.type === 'success') {
-                router.push('/(tabs)');
+            const response = await fetch('https://pantrypal15-1175d47ce25d.herokuapp.com/api/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: email,
+                    password: password,
+                }),
+                credentials: 'include', // Include session/cookies
+            });
+
+            if (response.ok) {
+                alert('Login successful!');
+                router.push('/(tabs)'); // Redirect to the main app page
+            } else {
+                const error = await response.text();
+                alert(error);
             }
         } catch (error) {
-            console.error('Google Sign In Error:', error);
+            console.error('Login Error:', error);
+            alert('An unexpected error occurred during login.');
         }
-    };
-
-    const handleSubmit = () => {
-        router.push('/(tabs)');
-    };
-
-    const handleSignUp = () => {
-        router.push('/SignUp');
     };
 
     if (!fontsLoaded) {
@@ -50,13 +53,13 @@ const LogIn = () => {
 
     return (
         <View style={styles.mainContainer}>
-            <Text style={styles.mainTitle}>login</Text>
-            
+            <Text style={styles.mainTitle}>Login</Text>
+
             <View style={styles.inputGroup}>
-                <Text style={styles.label}>email</Text>
+                <Text style={styles.label}>Email</Text>
                 <TextInput
                     style={styles.input}
-                    placeholder="your email"
+                    placeholder="Enter your email"
                     placeholderTextColor="#846E6E"
                     value={email}
                     onChangeText={setEmail}
@@ -64,12 +67,12 @@ const LogIn = () => {
                 />
                 <View style={styles.inputLine} />
             </View>
-            
+
             <View style={styles.inputGroup}>
-                <Text style={styles.label}>password</Text>
+                <Text style={styles.label}>Password</Text>
                 <TextInput
                     style={styles.input}
-                    placeholder="your password"
+                    placeholder="Enter your password"
                     placeholderTextColor="#846E6E"
                     value={password}
                     onChangeText={setPassword}
@@ -77,24 +80,17 @@ const LogIn = () => {
                 />
                 <View style={styles.inputLine} />
             </View>
-            
-            <TouchableOpacity 
+
+            <TouchableOpacity
                 style={styles.loginButton}
-                onPress={handleSubmit}
+                onPress={handleManualLogin}
             >
-                <Text style={styles.loginButtonText}>login</Text>
+                <Text style={styles.loginButtonText}>Login</Text>
             </TouchableOpacity>
 
-            <View style={styles.signUpContainer}>
-                <Text style={styles.signUpText}>Don't have an account? </Text>
-                <TouchableOpacity onPress={handleSignUp}>
-                    <Text style={styles.signUpLink}>Sign up</Text>
-                </TouchableOpacity>
-            </View>
+            <Text style={styles.orText}>or log in with Google</Text>
 
-            <Text style={styles.orText}>or log in with google</Text>
-
-            <TouchableOpacity 
+            <TouchableOpacity
                 style={styles.googleButton}
                 onPress={handleGoogleSignIn}
             >
@@ -118,7 +114,6 @@ const styles = StyleSheet.create({
         color: 'white',
         textAlign: 'center',
         marginBottom: 40,
-        marginTop: 40,
     },
     inputGroup: {
         width: '100%',
@@ -138,7 +133,6 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         padding: 8,
-        paddingLeft: 0,
     },
     inputLine: {
         width: '100%',
@@ -152,38 +146,20 @@ const styles = StyleSheet.create({
         padding: 15,
         backgroundColor: '#231911',
         borderRadius: 50,
-        marginVertical: 30,
+        marginVertical: 20,
     },
     loginButtonText: {
         fontFamily: 'Montaga',
         color: 'white',
         textAlign: 'center',
         fontSize: 16,
-        fontWeight: '500',
-    },
-    signUpContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        marginBottom: 20,
-    },
-    signUpText: {
-        fontFamily: 'Montaga',
-        color: 'white',
-        fontSize: 14,
-    },
-    signUpLink: {
-        fontFamily: 'Montaga',
-        color: '#B19696',
-        fontSize: 14,
-        marginLeft: 5,
     },
     orText: {
         fontFamily: 'Montaga',
-        color: '#231911',
+        color: '#846E6E',
         textAlign: 'center',
         fontSize: 14,
-        marginBottom: 20,
+        marginVertical: 10,
     },
     googleButton: {
         backgroundColor: 'white',
@@ -191,14 +167,12 @@ const styles = StyleSheet.create({
         borderRadius: 50,
         width: '100%',
         maxWidth: 400,
-        marginBottom: 40,
     },
     googleButtonText: {
         fontFamily: 'Montaga',
         color: '#846E6E',
         textAlign: 'center',
         fontSize: 16,
-        fontWeight: '500',
     },
 });
 
