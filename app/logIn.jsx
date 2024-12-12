@@ -70,7 +70,6 @@ const LogIn = () => {
                 const data = await response.json();
                 console.log('Login successful:', data);
                 await AsyncStorage.setItem('userId', data);
-                localStorage.setItem('userId', data);
                 router.push('/(tabs)');
             } else {
                 console.error('Login failed:', response);

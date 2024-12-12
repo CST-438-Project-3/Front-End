@@ -30,6 +30,8 @@ const Restock = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [lowItems, setLowItems] = useState([]);
   const [filteredItems, setFilteredItems] = useState([]);
+  const [userId, setUserId] = useState(null);
+
 
   if (!fontsLoaded) return null;
 
@@ -39,7 +41,16 @@ const Restock = () => {
   };
 
   useEffect(() => {
-    const fetchLowItems = async () => {
+    const fetchUserId = async () => {
+      try {
+        const userId = await AsyncStorage.getItem("userId");
+        setUserId(userId);
+        return userId;
+      } catch (error) {
+        console.error("Error fetching user ID:", error);
+      }
+    };
+    const fetchLowItems = async (userId) => {
       try {
         const response = await fetch(
           `https://pantrypal15-1175d47ce25d.herokuapp.com/userItems/user/${userId}`
@@ -91,9 +102,13 @@ const Restock = () => {
       setCategories(uniqueCategories);
     };
 
-    fetchLowItems().then((lowItems) => {
-      fetchLowItemDetails(lowItems);
-    });
+    const loadItems = async () => {
+      const userId = await fetchUserId();
+      const lowItems = await fetchLowItems(userId);
+      await fetchLowItemDetails(lowItems);
+    }
+
+    loadItems();
   }, []);
 
   // Add category filter function
