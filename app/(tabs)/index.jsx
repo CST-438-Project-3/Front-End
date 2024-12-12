@@ -100,15 +100,31 @@ const Index = () => {
   }, [searchQuery, selectedCategory, pantryItems]);
 
   const loadItems = async () => {
+    const fetchItemDetails = async (items) => {  
+
+      const updatedItems = await Promise.all(
+        items.map(async (item) => {
+          try {
+              const response = await fetch(
+                `https://pantrypal15-1175d47ce25d.herokuapp.com/items/${item.itemId}`
+              );
+              const itemDetails = await response.json();
+              return itemDetails;
+          } catch (error) {
+            console.error("Error fetching item details:", error);
+            return null;
+          }
+        })
+      );
+      setPantryItems(updatedItems);
+      setFilteredItems(updatedItems);
+    };
     try {
       setIsLoading(true);
       const items = await fetchItems();
-      if (Array.isArray(items)) {
-        setPantryItems(items);
-        setFilteredItems(items);
-      } else {
-        setError("Invalid data format received");
-      }
+      await fetchItemDetails(items);
+        
+   
     } catch (error) {
       console.error("Error loading items:", error);
       setError("Failed to load items: " + error.message);

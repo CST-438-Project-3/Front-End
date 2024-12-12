@@ -28,16 +28,7 @@ export const usePantry = () => {
       );
       const userItems = await userItemsResponse.json();
 
-      const itemsWithFavorites = items.map((item) => {
-        const userItem = userItems.find((ui) => ui.itemId === item.id);
-        return {
-          ...item,
-          is_favorite: userItem ? userItem.is_favorite : false,
-          itemQuantity: item.item_quantity === null ? 0 : item.item_quantity,
-        };
-      });
-
-      return itemsWithFavorites;
+      return userItems;
     } catch (error) {
       console.error("Error fetching items:", error);
       return [];
