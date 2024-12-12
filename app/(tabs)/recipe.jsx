@@ -15,11 +15,10 @@ import {
 import { useFonts } from "expo-font";
 import { Link } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 const isMobile = width < 600;
-
-const userId = "1";
 
 const Recipe = () => {
   const [items, setItems] = useState([]);
@@ -37,7 +36,15 @@ const Recipe = () => {
   }
 
   useEffect(() => {
-    const fetchItems = async () => {
+    const fetchUserId = async () => {
+      try {
+        const userId = await AsyncStorage.getItem("userId");
+        return userId;
+      } catch (error) {
+        console.error("Error fetching user ID:", error);
+      }
+    };
+    const fetchItems = async (userId) => {
       console.log("Fetching items...");
       try {
         const response = await fetch(
@@ -46,8 +53,11 @@ const Recipe = () => {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data = await response.json();
-        return data;
+        let data = await response.json();
+        console.log("Fetched items:", data);
+        const dataInStock = data.filter((item) => item.quantity > 0);
+        console.log("Items in stock:", dataInStock);
+        return dataInStock;
       } catch (error) {
         console.error("Error fetching items:", error);
         return [];
@@ -106,7 +116,8 @@ const Recipe = () => {
 
     const loadData = async () => {
       setLoading(true);
-      const items = await fetchItems();
+      const userId = await fetchUserId();
+      const items = await fetchItems(userId);
       const updatedItems = await fetchItemDetails(items);
       await fetchRecipes(updatedItems);
       setLoading(false);
@@ -552,6 +563,8 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#BCABAB",
     lineHeight: 20,
+    maxHeight: 200,
+    overflow: "scroll",
   },
   ingredientsList: {
     paddingTop: 5,
